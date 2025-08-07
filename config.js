@@ -277,6 +277,34 @@ function initializeSupabase() {
                     setStoredData(table, mockData);
                 }
                 
+                // Asegurar que siempre tenemos datos del Super Usuario
+                if (table === 'super_su' && mockData.length === 0) {
+                    const superUserData = [{
+                        id_super: 1,
+                        nombre: 'Super Administrador',
+                        correo: 'superadmin@senati.pe',
+                        contraseña: 'superadmin123',
+                        created_at: new Date().toISOString()
+                    }];
+                    setStoredData('super_su', superUserData);
+                    mockData = superUserData;
+                }
+                
+                // Asegurar que siempre tenemos datos del Admin demo
+                if (table === 'admin' && mockData.length === 0) {
+                    const adminData = [{
+                        id_admin: 1,
+                        nombre: 'Admin SENATI',
+                        correo: 'admin@senati.pe',
+                        contraseña: 'admin123',
+                        rol: 'admin_general',
+                        id_super_admin: 1,
+                        created_at: new Date().toISOString()
+                    }];
+                    setStoredData('admin', adminData);
+                    mockData = adminData;
+                }
+                
                 console.log(`🔍 Mock query for table "${table}":`, mockData);
                 
                 // Si es tabla preguntas, mostrar detalles de filtrado
