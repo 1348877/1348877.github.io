@@ -37,7 +37,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const encuestaId = getEncuestaIdFromURL();
     
     if (!encuestaId) {
+        console.log('❌ No se proporcionó ID de encuesta, redirigiendo a lista de encuestas');
         showNotFound();
+        // Mostrar enlace a lista de encuestas en lugar de error
+        setTimeout(() => {
+            window.location.href = 'encuestas.html';
+        }, 2000);
         return;
     }
     
@@ -85,28 +90,44 @@ async function loadEncuesta(encuestaId) {
     try {
         showSection('loading');
         
+        // Convertir el ID a número para comparación consistente
+        const numericEncuestaId = Number(encuestaId);
+        if (isNaN(numericEncuestaId)) {
+            throw new Error('ID de encuesta inválido');
+        }
+        
+        console.log(`🔍 Cargando encuesta ID: ${numericEncuestaId}`);
+        
         // En modo desarrollo, usar sistema mock persistente
         if (SUPABASE_CONFIG.url === 'https://demo.supabase.co') {
             // Obtener la encuesta específica por ID
             const { data: encuesta, error: encuestaError } = await supabase
                 .from('encuestas')
                 .select('*')
-                .eq('id_encuesta', encuestaId)
+                .eq('id_encuesta', numericEncuestaId)
                 .eq('activa', true)
                 .single();
                 
             if (encuestaError || !encuesta) {
+                console.error('❌ Error cargando encuesta:', encuestaError);
                 throw new Error('Encuesta no encontrada o inactiva');
             }
+            
+            console.log('✅ Encuesta encontrada:', encuesta);
             
             // Obtener las preguntas con alternativas
             const { data: preguntas, error: preguntasError } = await supabase
                 .from('preguntas')
                 .select('*, alternativas (*)')
-                .eq('id_encuesta', encuestaId)
+                .eq('id_encuesta', numericEncuestaId)
                 .order('orden_pregunta');
                 
-            if (preguntasError) throw preguntasError;
+            if (preguntasError) {
+                console.error('❌ Error cargando preguntas:', preguntasError);
+                throw preguntasError;
+            }
+            
+            console.log('✅ Preguntas encontradas:', preguntas?.length || 0);
             
             currentEncuesta = encuesta;
             currentPreguntas = preguntas || [];

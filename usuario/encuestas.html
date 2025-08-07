@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encuestas Disponibles - SENATI</title>
+    <link rel="stylesheet" href="../assets/common.css">
+    <style>
+        .encuestas-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            margin: 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .encuestas-list {
+            display: grid;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .encuesta-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #28a745;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .encuesta-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .encuesta-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.3rem;
+        }
+        
+        .encuesta-card p {
+            margin: 0 0 15px 0;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        .encuesta-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .encuesta-fecha {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        .btn-responder {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-responder:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .no-encuestas {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .no-encuestas h3 {
+            color: #888;
+            margin-bottom: 15px;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="encuestas-container">
+        <div class="header">
+            <h1>📝 Encuestas SENATI</h1>
+            <p>Selecciona una encuesta para participar y ayúdanos a mejorar nuestros servicios</p>
+        </div>
+        
+        <div id="loading-section" class="loading">
+            <h3>🔄 Cargando encuestas disponibles...</h3>
+            <p>Por favor, espera un momento.</p>
+        </div>
+        
+        <div id="encuestas-section" class="hidden">
+            <div id="encuestas-list" class="encuestas-list">
+                <!-- Las encuestas se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+        
+        <div id="no-encuestas-section" class="no-encuestas hidden">
+            <h3>📭 No hay encuestas disponibles</h3>
+            <p>En este momento no hay encuestas activas para responder.</p>
+            <p>Vuelve más tarde para ver nuevas encuestas.</p>
+        </div>
+        
+        <div id="error-section" class="hidden">
+            <div class="error-message">
+                <strong>❌ Error al cargar encuestas</strong>
+                <p id="error-message">Hubo un problema al conectar con el servidor. Por favor, recarga la página o intenta más tarde.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../config.js"></script>
+    <script>
+        let supabase;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar Sentry
+            const sentryActive = initializeSentry();
+            if (sentryActive) {
+                console.log('✅ Sentry activo para listado de encuestas');
+                captureSentryMessage('Listado de encuestas - Página cargada', 'info', {
+                    page: 'encuestas-list',
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            // Inicializar Supabase
+            supabase = initializeSupabase();
+            if (!supabase) {
+                showError('No se pudo conectar con la base de datos.');
+                return;
+            }
+            
+            loadEncuestas();
+        });
+
+        async function loadEncuestas() {
+            try {
+                showSection('loading');
+                
+                console.log('🔍 Cargando encuestas activas...');
+                
+                const { data: encuestas, error } = await supabase
+                    .from('encuestas')
+                    .select('*')
+                    .eq('activa', true)
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    console.error('❌ Error cargando encuestas:', error);
+                    throw error;
+                }
+                
+                console.log('✅ Encuestas encontradas:', encuestas?.length || 0);
+                
+                if (!encuestas || encuestas.length === 0) {
+                    showSection('no-encuestas');
+                    return;
+                }
+                
+                renderEncuestas(encuestas);
+                showSection('encuestas');
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showError(error.message);
+                
+                if (window.captureSentryError) {
+                    captureSentryError(error, {
+                        page: 'encuestas-list',
+                        action: 'load_encuestas'
+                    });
+                }
+            }
+        }
+
+        function renderEncuestas(encuestas) {
+            const container = document.getElementById('encuestas-list');
+            container.innerHTML = '';
+            
+            encuestas.forEach(encuesta => {
+                const encuestaCard = document.createElement('div');
+                encuestaCard.className = 'encuesta-card';
+                encuestaCard.onclick = () => responderEncuesta(encuesta.id_encuesta);
+                
+                const fecha = new Date(encuesta.created_at || encuesta.fecha).toLocaleDateString('es-PE', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                encuestaCard.innerHTML = `
+                    <h3>${encuesta.titulo}</h3>
+                    <p>${encuesta.descripcion}</p>
+                    <div class="encuesta-meta">
+                        <span class="encuesta-fecha">📅 ${fecha}</span>
+                        <a href="#" class="btn-responder" onclick="event.stopPropagation(); responderEncuesta(${encuesta.id_encuesta})">
+                            Responder Encuesta →
+                        </a>
+                    </div>
+                `;
+                
+                container.appendChild(encuestaCard);
+            });
+        }
+
+        function responderEncuesta(encuestaId) {
+            console.log(`🚀 Redirigiendo a encuesta ID: ${encuestaId}`);
+            
+            if (window.captureSentryMessage) {
+                captureSentryMessage('Usuario iniciando encuesta', 'info', {
+                    page: 'encuestas-list',
+                    action: 'start_encuesta',
+                    encuesta_id: encuestaId
+                });
+            }
+            
+            window.location.href = `index.html?id=${encuestaId}`;
+        }
+
+        function showSection(sectionName) {
+            // Ocultar todas las secciones
+            document.getElementById('loading-section').classList.add('hidden');
+            document.getElementById('encuestas-section').classList.add('hidden');
+            document.getElementById('no-encuestas-section').classList.add('hidden');
+            document.getElementById('error-section').classList.add('hidden');
+            
+            // Mostrar la sección solicitada
+            document.getElementById(sectionName + '-section').classList.remove('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('error-message').textContent = message;
+            showSection('error');
+        }
+    </script>
+</body>
+</html>
