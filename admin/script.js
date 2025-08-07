@@ -202,7 +202,12 @@ async function handleLogin(e) {
 
 function handleLogout() {
     clearAdminSession();
-    showMessage('Sesión cerrada exitosamente.', 'info');
+    showMessage('Sesión cerrada exitosamente. Redirigiendo...', 'info');
+    
+    // Redirigir a la página principal (index.html)
+    setTimeout(() => {
+        window.location.href = '/';
+    }, 1500);
 }
 
 // UI Management
@@ -218,9 +223,14 @@ function showAdminDashboard() {
     
     // Mostrar botón de solicitudes solo para Super Usuario
     const solicitudesBtn = document.getElementById('nav-solicitudes');
+    console.log('🔍 Rol actual del usuario:', currentAdmin.rol);
+    console.log('🔍 ¿Es Super Admin?:', currentAdmin.rol === 'super_admin');
+    
     if (currentAdmin.rol === 'super_admin') {
+        console.log('✅ Mostrando botón de solicitudes para Super Usuario');
         solicitudesBtn.classList.remove('hidden');
     } else {
+        console.log('❌ Ocultando botón de solicitudes para admin normal');
         solicitudesBtn.classList.add('hidden');
     }
     
@@ -562,11 +572,9 @@ async function handleSaveEncuesta(e) {
                 if (error) throw error;
                 savedEncuesta = data;
                 
-                // Delete existing questions and alternatives for clean update
-                console.log(`🗑️ Eliminando preguntas existentes para encuesta ${encuestaId}`);
-                await supabase.from('preguntas').delete().eq('id_encuesta', encuestaId);
-                console.log(`🗑️ Eliminando alternativas existentes para encuesta ${encuestaId}`);
-                await supabase.from('alternativas').delete().eq('id_encuesta', encuestaId);
+                // Update questions and alternatives (preserving existing data)
+                console.log(`� Actualizando preguntas y alternativas para encuesta ${encuestaId}`);
+                await updateQuestionsAndAlternatives(savedEncuesta.id_encuesta, questions);
                 
             } else {
                 // Create new encuesta
@@ -584,10 +592,10 @@ async function handleSaveEncuesta(e) {
                     
                 if (error) throw error;
                 savedEncuesta = data;
+                
+                // Save questions and alternatives for new encuesta
+                await saveQuestions(savedEncuesta.id_encuesta, questions);
             }
-            
-            // Save questions and alternatives
-            await saveQuestions(savedEncuesta.id_encuesta, questions);
             
             showMessage('Encuesta guardada exitosamente!', 'success');
             showSection('encuestas');
@@ -613,30 +621,9 @@ async function handleSaveEncuesta(e) {
             if (error) throw error;
             savedEncuesta = data;
             
-            // Delete existing questions and alternatives for clean update
-            const { data: existingQuestions } = await supabase
-                .from('preguntas')
-                .select('id_pregunta')
-                .eq('id_encuesta', encuestaId);
-                
-            if (existingQuestions) {
-                for (const pregunta of existingQuestions) {
-                    await supabase
-                        .from('alternativas')
-                        .delete()
-                        .eq('id_pregunta', pregunta.id_pregunta);
-                        
-                    await supabase
-                        .from('respuestas')
-                        .delete()
-                        .eq('id_pregunta', pregunta.id_pregunta);
-                }
-            }
-            
-            await supabase
-                .from('preguntas')
-                .delete()
-                .eq('id_encuesta', encuestaId);
+            // Update questions and alternatives (preserving existing data)
+            console.log(`🔄 Actualizando preguntas y alternativas para encuesta ${encuestaId}`);
+            await updateQuestionsAndAlternatives(savedEncuesta.id_encuesta, questions);
                 
         } else {
             // Create new encuesta
@@ -654,10 +641,10 @@ async function handleSaveEncuesta(e) {
                 
             if (error) throw error;
             savedEncuesta = data;
+            
+            // Save questions and alternatives for new encuesta
+            await saveQuestions(savedEncuesta.id_encuesta, questions);
         }
-        
-        // Save questions and alternatives
-        await saveQuestions(savedEncuesta.id_encuesta, questions);
         
         showMessage('Encuesta guardada exitosamente!', 'success');
         showSection('encuestas');
@@ -2452,6 +2439,163 @@ async function asignarRolAdmin(userId, aprobar) {
     } catch (error) {
         console.error('Error asignando rol admin:', error);
         showMessage('Error al procesar la solicitud: ' + error.message, 'error');
+    }
+}
+
+// Function to update questions and alternatives while preserving existing data
+async function updateQuestionsAndAlternatives(encuestaId, newQuestions) {
+    console.log(`🔄 Iniciando actualización de preguntas para encuesta ${encuestaId}`);
+    
+    try {
+        // Get existing questions
+        const { data: existingQuestions } = await supabase
+            .from('preguntas')
+            .select('*')
+            .eq('id_encuesta', encuestaId)
+            .order('orden');
+            
+        console.log(`📋 Preguntas existentes: ${existingQuestions?.length || 0}`);
+        console.log(`📝 Nuevas preguntas: ${newQuestions.length}`);
+        
+        // Create maps for easier comparison
+        const existingMap = new Map();
+        if (existingQuestions) {
+            existingQuestions.forEach(q => existingMap.set(q.orden, q));
+        }
+        
+        // Process each new question
+        for (let i = 0; i < newQuestions.length; i++) {
+            const newQuestion = newQuestions[i];
+            const orden = i + 1;
+            const existingQuestion = existingMap.get(orden);
+            
+            if (existingQuestion) {
+                // Update existing question if content changed
+                if (existingQuestion.texto !== newQuestion.texto || 
+                    existingQuestion.tipo_pregunta !== newQuestion.tipo_pregunta) {
+                    console.log(`🔄 Actualizando pregunta ${orden}`);
+                    await supabase
+                        .from('preguntas')
+                        .update({
+                            texto: newQuestion.texto,
+                            tipo_pregunta: newQuestion.tipo_pregunta
+                        })
+                        .eq('id_pregunta', existingQuestion.id_pregunta);
+                }
+                
+                // Update alternatives for this question
+                await updateAlternativesForQuestion(existingQuestion.id_pregunta, newQuestion.alternatives, encuestaId);
+                
+            } else {
+                // Create new question
+                console.log(`➕ Creando nueva pregunta ${orden}`);
+                const { data: newQuestionData } = await supabase
+                    .from('preguntas')
+                    .insert({
+                        id_encuesta: encuestaId,
+                        texto: newQuestion.texto,
+                        tipo_pregunta: newQuestion.tipo_pregunta,
+                        orden: orden
+                    })
+                    .select()
+                    .single();
+                
+                // Create alternatives for new question
+                if (newQuestion.alternatives && newQuestion.alternatives.length > 0) {
+                    await saveAlternatives(newQuestionData.id_pregunta, newQuestion.alternatives, encuestaId);
+                }
+            }
+        }
+        
+        // Remove questions that are no longer needed
+        if (existingQuestions && existingQuestions.length > newQuestions.length) {
+            for (let i = newQuestions.length; i < existingQuestions.length; i++) {
+                const questionToDelete = existingQuestions[i];
+                console.log(`🗑️ Eliminando pregunta sobrante: ${questionToDelete.texto}`);
+                
+                // Delete alternatives first
+                await supabase
+                    .from('alternativas')
+                    .delete()
+                    .eq('id_pregunta', questionToDelete.id_pregunta);
+                    
+                // Delete question
+                await supabase
+                    .from('preguntas')
+                    .delete()
+                    .eq('id_pregunta', questionToDelete.id_pregunta);
+            }
+        }
+        
+        console.log('✅ Actualización de preguntas completada');
+        
+    } catch (error) {
+        console.error('❌ Error actualizando preguntas:', error);
+        throw error;
+    }
+}
+
+// Function to update alternatives for a specific question
+async function updateAlternativesForQuestion(questionId, newAlternatives, encuestaId) {
+    if (!newAlternatives || newAlternatives.length === 0) {
+        // Delete all alternatives if none provided
+        await supabase
+            .from('alternativas')
+            .delete()
+            .eq('id_pregunta', questionId);
+        return;
+    }
+    
+    // Get existing alternatives
+    const { data: existingAlternatives } = await supabase
+        .from('alternativas')
+        .select('*')
+        .eq('id_pregunta', questionId)
+        .order('orden');
+    
+    console.log(`🔄 Actualizando alternativas - Existentes: ${existingAlternatives?.length || 0}, Nuevas: ${newAlternatives.length}`);
+    
+    // Update or create alternatives
+    for (let i = 0; i < newAlternatives.length; i++) {
+        const newAlt = newAlternatives[i];
+        const orden = i + 1;
+        const existingAlt = existingAlternatives && existingAlternatives[i];
+        
+        if (existingAlt) {
+            // Update existing alternative if content changed
+            if (existingAlt.texto_opcion !== newAlt.texto_opcion) {
+                console.log(`🔄 Actualizando alternativa ${orden}`);
+                await supabase
+                    .from('alternativas')
+                    .update({
+                        texto_opcion: newAlt.texto_opcion
+                    })
+                    .eq('id_alternativa', existingAlt.id_alternativa);
+            }
+        } else {
+            // Create new alternative
+            console.log(`➕ Creando nueva alternativa ${orden}`);
+            await supabase
+                .from('alternativas')
+                .insert({
+                    id_pregunta: questionId,
+                    id_encuesta: encuestaId,
+                    texto_opcion: newAlt.texto_opcion,
+                    orden: orden
+                });
+        }
+    }
+    
+    // Remove alternatives that are no longer needed
+    if (existingAlternatives && existingAlternatives.length > newAlternatives.length) {
+        for (let i = newAlternatives.length; i < existingAlternatives.length; i++) {
+            const altToDelete = existingAlternatives[i];
+            console.log(`🗑️ Eliminando alternativa sobrante: ${altToDelete.texto_opcion}`);
+            await supabase
+                .from('alternativas')
+                .delete()
+                .eq('id_alternativa', altToDelete.id_alternativa);
+        }
     }
 }
 
