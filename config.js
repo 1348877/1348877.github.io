@@ -267,6 +267,66 @@ function initializeSupabase() {
                             created_at: new Date().toISOString()
                         }
                     ],
+                    encuestas: [
+                        {
+                            id_encuesta: 1,
+                            titulo: 'Evaluación del Café SENATI',
+                            descripcion: 'Encuesta para evaluar la calidad del servicio del café institucional del SENATI',
+                            fecha: '2025-08-06',
+                            activa: true,
+                            id_admin: 1,
+                            created_at: new Date().toISOString()
+                        }
+                    ],
+                    preguntas: [
+                        { id_pregunta: 1, texto: '¿Cuál es tu nombre completo?', tipo_pregunta: 'open_text', requerida: true, orden_pregunta: 1, id_encuesta: 1, created_at: new Date().toISOString() },
+                        { id_pregunta: 2, texto: '¿Cuál es tu edad?', tipo_pregunta: 'open_text', requerida: true, orden_pregunta: 2, id_encuesta: 1, created_at: new Date().toISOString() },
+                        { id_pregunta: 3, texto: '¿Cuál es tu género?', tipo_pregunta: 'single_choice', requerida: true, orden_pregunta: 3, id_encuesta: 1, created_at: new Date().toISOString() },
+                        { id_pregunta: 4, texto: '¿Cómo calificarías la CALIDAD DE LA COMIDA del café SENATI?', tipo_pregunta: 'single_choice', requerida: true, orden_pregunta: 4, id_encuesta: 1, created_at: new Date().toISOString() },
+                        { id_pregunta: 5, texto: '¿Cómo calificarías la ATENCIÓN AL CLIENTE del café SENATI?', tipo_pregunta: 'single_choice', requerida: true, orden_pregunta: 5, id_encuesta: 1, created_at: new Date().toISOString() },
+                        { id_pregunta: 6, texto: '¿Cómo calificarías la INFRAESTRUCTURA del café SENATI?', tipo_pregunta: 'single_choice', requerida: true, orden_pregunta: 6, id_encuesta: 1, created_at: new Date().toISOString() },
+                        { id_pregunta: 7, texto: '¿Cómo calificarías la VARIEDAD DEL MENÚ del café SENATI?', tipo_pregunta: 'single_choice', requerida: true, orden_pregunta: 7, id_encuesta: 1, created_at: new Date().toISOString() },
+                        { id_pregunta: 8, texto: '¿Cómo calificarías la RELACIÓN PRECIO-CALIDAD del café SENATI?', tipo_pregunta: 'single_choice', requerida: true, orden_pregunta: 8, id_encuesta: 1, created_at: new Date().toISOString() }
+                    ],
+                    alternativas: [
+                        // Género
+                        { id_alternativa: 1, texto_opcion: 'Masculino', orden_alternativa: 1, id_pregunta: 3, created_at: new Date().toISOString() },
+                        { id_alternativa: 2, texto_opcion: 'Femenino', orden_alternativa: 2, id_pregunta: 3, created_at: new Date().toISOString() },
+                        { id_alternativa: 3, texto_opcion: 'Otro', orden_alternativa: 3, id_pregunta: 3, created_at: new Date().toISOString() },
+                        { id_alternativa: 4, texto_opcion: 'Prefiero no decir', orden_alternativa: 4, id_pregunta: 3, created_at: new Date().toISOString() },
+                        // Calidad comida
+                        { id_alternativa: 5, texto_opcion: '1 - Muy mala', orden_alternativa: 1, id_pregunta: 4, created_at: new Date().toISOString() },
+                        { id_alternativa: 6, texto_opcion: '2 - Mala', orden_alternativa: 2, id_pregunta: 4, created_at: new Date().toISOString() },
+                        { id_alternativa: 7, texto_opcion: '3 - Regular', orden_alternativa: 3, id_pregunta: 4, created_at: new Date().toISOString() },
+                        { id_alternativa: 8, texto_opcion: '4 - Buena', orden_alternativa: 4, id_pregunta: 4, created_at: new Date().toISOString() },
+                        { id_alternativa: 9, texto_opcion: '5 - Excelente', orden_alternativa: 5, id_pregunta: 4, created_at: new Date().toISOString() },
+                        // Atención cliente
+                        { id_alternativa: 10, texto_opcion: '1 - Muy mala', orden_alternativa: 1, id_pregunta: 5, created_at: new Date().toISOString() },
+                        { id_alternativa: 11, texto_opcion: '2 - Mala', orden_alternativa: 2, id_pregunta: 5, created_at: new Date().toISOString() },
+                        { id_alternativa: 12, texto_opcion: '3 - Regular', orden_alternativa: 3, id_pregunta: 5, created_at: new Date().toISOString() },
+                        { id_alternativa: 13, texto_opcion: '4 - Buena', orden_alternativa: 4, id_pregunta: 5, created_at: new Date().toISOString() },
+                        { id_alternativa: 14, texto_opcion: '5 - Excelente', orden_alternativa: 5, id_pregunta: 5, created_at: new Date().toISOString() },
+                        // Infraestructura
+                        { id_alternativa: 15, texto_opcion: '1 - Muy mala', orden_alternativa: 1, id_pregunta: 6, created_at: new Date().toISOString() },
+                        { id_alternativa: 16, texto_opcion: '2 - Mala', orden_alternativa: 2, id_pregunta: 6, created_at: new Date().toISOString() },
+                        { id_alternativa: 17, texto_opcion: '3 - Regular', orden_alternativa: 3, id_pregunta: 6, created_at: new Date().toISOString() },
+                        { id_alternativa: 18, texto_opcion: '4 - Buena', orden_alternativa: 4, id_pregunta: 6, created_at: new Date().toISOString() },
+                        { id_alternativa: 19, texto_opcion: '5 - Excelente', orden_alternativa: 5, id_pregunta: 6, created_at: new Date().toISOString() },
+                        // Variedad menú
+                        { id_alternativa: 20, texto_opcion: '1 - Muy mala', orden_alternativa: 1, id_pregunta: 7, created_at: new Date().toISOString() },
+                        { id_alternativa: 21, texto_opcion: '2 - Mala', orden_alternativa: 2, id_pregunta: 7, created_at: new Date().toISOString() },
+                        { id_alternativa: 22, texto_opcion: '3 - Regular', orden_alternativa: 3, id_pregunta: 7, created_at: new Date().toISOString() },
+                        { id_alternativa: 23, texto_opcion: '4 - Buena', orden_alternativa: 4, id_pregunta: 7, created_at: new Date().toISOString() },
+                        { id_alternativa: 24, texto_opcion: '5 - Excelente', orden_alternativa: 5, id_pregunta: 7, created_at: new Date().toISOString() },
+                        // Precio-calidad
+                        { id_alternativa: 25, texto_opcion: '1 - Muy mala', orden_alternativa: 1, id_pregunta: 8, created_at: new Date().toISOString() },
+                        { id_alternativa: 26, texto_opcion: '2 - Mala', orden_alternativa: 2, id_pregunta: 8, created_at: new Date().toISOString() },
+                        { id_alternativa: 27, texto_opcion: '3 - Regular', orden_alternativa: 3, id_pregunta: 8, created_at: new Date().toISOString() },
+                        { id_alternativa: 28, texto_opcion: '4 - Buena', orden_alternativa: 4, id_pregunta: 8, created_at: new Date().toISOString() },
+                        { id_alternativa: 29, texto_opcion: '5 - Excelente', orden_alternativa: 5, id_pregunta: 8, created_at: new Date().toISOString() }
+                    ],
+                    respuestas: [],
+                    reportes: [],
                     solicitudes_admin: [
                         // Tabla para almacenar solicitudes de registro pendientes
                         // Campos: id_solicitud, nombre, correo, contraseña, estado, fecha_solicitud, fecha_respuesta, id_super_admin
@@ -284,8 +344,8 @@ function initializeSupabase() {
                 // Asegurar que siempre tenemos datos del Super Usuario
                 if (table === 'super_su' && mockData.length === 0) {
                     const superUserData = [{
-                        id_super_su: 0, // ID único para Super Usuario
-                        nombre: 'Super Administrador',
+                        id_super: 1, // Coincide con database.sql
+                        nombre: 'Super Admin SENATI',
                         correo: 'superadmin@senati.pe',
                         contraseña: 'superadmin123',
                         created_at: new Date().toISOString()
@@ -297,12 +357,12 @@ function initializeSupabase() {
                 // Asegurar que siempre tenemos datos del Admin demo
                 if (table === 'admin' && mockData.length === 0) {
                     const adminData = [{
-                        id_admin: 1, // ID único para Admin normal
+                        id_admin: 1, // Coincide con database.sql
                         nombre: 'Admin SENATI',
                         correo: 'admin@senati.pe',
                         contraseña: 'admin123',
-                        rol: 'admin_general',
-                        id_super_admin: 0, // Referencia al Super Usuario
+                        rol: 'admin',
+                        id_super_admin: 1, // Referencia a super_su.id_super
                         created_at: new Date().toISOString()
                     }];
                     setStoredData('admin', adminData);

@@ -92,6 +92,21 @@ CREATE TABLE reportes (
     FOREIGN KEY (id_admin) REFERENCES admin(id_admin)
 );
 
+-- Tabla de solicitudes de administrador
+CREATE TABLE solicitudes_admin (
+    id_solicitud INT PRIMARY KEY,
+    nombre VARCHAR(100),
+    correo VARCHAR(100),
+    contraseña VARCHAR(255),
+    justificacion TEXT,
+    estado VARCHAR(50) DEFAULT 'pendiente', -- 'pendiente', 'aprobada', 'rechazada'
+    fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_respuesta TIMESTAMP,
+    rol_asignado VARCHAR(50),
+    id_super_admin INT,
+    FOREIGN KEY (id_super_admin) REFERENCES super_su(id_super)
+);
+
 -- Insertar datos de prueba
 INSERT INTO super_su (id_super, nombre, correo, contraseña) VALUES 
 (1, 'Super Admin SENATI', 'superadmin@senati.pe', 'superadmin123');
