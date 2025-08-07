@@ -1,0 +1,33 @@
+# Archivos de desarrollo y testing
+*.bat
+*.py
+*.ps1
+*debug*.html
+*test*.html
+*prueba*.html
+*sentry*.html
+*auto*.html
+*monitor*.html
+*ejecutor*.html
+*reporte*.html
+*diagnostic*.html
+*functional*.html
+*limpiar*.html
+
+# Documentación de desarrollo
+DEBUG-*.md
+PLAN-DEBUG.md
+SENTRY-SETUP.md
+EJECUCION_RAPIDA.md
+EJECUTAR-PRUEBAS.md
+LEEME_PRIMERO.txt
+avance.txt
+
+# Configuración de desarrollo
+.vscode/
+otros/
+
+# Archivos temporales
+*.tmp
+*.log
+node_modules/
