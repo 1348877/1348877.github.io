@@ -2,83 +2,146 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-w    <!-- Login Section -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Encuestas - Página Principal</title>
+    
+    <!-- Sentry SDK -->
+    <script src="https://js.sentry-cdn.com/db9dacf914f7fae45d7ba634f3ff0d70.min.js" crossorigin="anonymous"></script>
+    
+    <link rel="stylesheet" href="assets/common.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 80px 0;
+            margin-bottom: 0;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .cta-btn {
+            display: inline-block;
+            padding: 15px 35px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: none;
+            cursor: pointer;
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .form-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 30px;
+            margin: 20px auto;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .form-section h3 {
+            color: white;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            background: rgba(255,255,255,0.9);
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            background: white;
+        }
+        
+        .validation-section {
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .validation-section h4 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .validation-section small {
+            color: rgba(255,255,255,0.8);
+            font-style: italic;
+            display: block;
+            margin-top: 10px;
+        }
+        
+        .btn-nav {
+            margin: 0 8px;
+            padding: 12px 24px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .success-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        @media (max-width: 768px) {
+            .form-section {
+                margin: 20px 10px;
+                padding: 20px;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Section -->
     <section class="hero">
         <div class="container">
-            <h1 id="main-title">🔐 Iniciar Sesión Administrador</h1>
-            
-            <!-- Formulario de Login -->
-            <form id="login-form" class="form-section" style="max-width: 400px;">
-                <div class="form-group">
-                    <label for="correo">Correo electrónico</label>
-                    <input type="email" id="correo" name="correo" required class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="password">Contraseña</label>
-                    <input type="password" id="password" name="password" required class="form-control">
-                </div>
-                <button type="submit" class="cta-btn" style="width:100%;">Iniciar Sesión</button>
-            </form>
-            
-            <!-- Formulario de Registro (oculto inicialmente) -->
-            <form id="registro-form" class="form-section hidden" style="max-width: 550px;">
-                <h3>📝 Registro de Nuevo Administrador</h3>
-                
-                <div class="form-group">
-                    <label for="reg-nombre">Nombre completo</label>
-                    <input type="text" id="reg-nombre" name="nombre" required class="form-control">
-                </div>
-                
-                <div class="form-group">
-                    <label for="reg-correo">Correo electrónico</label>
-                    <input type="email" id="reg-correo" name="correo" required class="form-control">
-                </div>
-                
-                <div class="form-group">
-                    <label for="reg-password">Contraseña</label>
-                    <input type="password" id="reg-password" name="password" required class="form-control">
-                </div>
-                
-                <div class="form-group">
-                    <label for="reg-password-confirm">Confirmar contraseña</label>
-                    <input type="password" id="reg-password-confirm" name="password_confirm" required class="form-control">
-                </div>
-                
-                <div class="form-group">
-                    <label for="reg-rol">Rol solicitado</label>
-                    <select id="reg-rol" name="rol" required class="form-control">
-                        <option value="">Seleccione un rol</option>
-                        <option value="admin_encuestas">Administrador de Encuestas</option>
-                        <option value="admin_reportes">Administrador de Reportes</option>
-                        <option value="admin_general">Administrador General</option>
-                    </select>
-                </div>
-                
-                <div class="validation-section">
-                    <h4>🔑 Validación de Super Usuario</h4>
-                    <div class="form-group">
-                        <label for="super-correo">Correo del Super Usuario</label>
-                        <input type="email" id="super-correo" name="super_correo" required class="form-control">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="super-password">Contraseña del Super Usuario</label>
-                        <input type="password" id="super-password" name="super_password" required class="form-control">
-                    </div>
-                    
-                    <small>Solo el Super Usuario puede aprobar nuevos administradores</small>
-                </div>
-                
-                <button type="submit" class="cta-btn success-btn" style="width:100%;">Registrar Administrador</button>
-            </form>
-            
-            <!-- Botones de navegación -->
-            <div style="text-align: center; margin-top: 30px;">
-                <button id="btn-mostrar-registro" class="cta-btn btn-nav">📝 Registrarse como Admin</button>
-                <button id="btn-mostrar-login" class="cta-btn btn-nav hidden">🔐 Volver al Login</button>
-            </div>
-        </div>
-    </section>-scale=1.0">
+            <h1 id="main-title">🔐 Iniciar Sesión Administrador</h1>>
     <title>Sistema de Encuestas - Página Principal</title>
     
     <!-- Sentry SDK -->
@@ -296,18 +359,81 @@
     </style>
 </head>
 <body>
-
     <!-- Login Section -->
     <section class="hero">
         <div class="container">
-            <h1>� Iniciar Sesión Administrador</h1>
-            <form id="login-form" style="max-width: 400px; margin: 40px auto 0 auto; text-align: left; background: rgba(255,255,255,0.1); padding: 30px; border-radius: 10px;">
-                <label for="correo">Correo electrónico</label>
-                <input type="email" id="correo" name="correo" required style="width:100%;padding:10px;margin-bottom:15px;border-radius:5px;border:1px solid #ccc;">
-                <label for="password">Contraseña</label>
-                <input type="password" id="password" name="password" required style="width:100%;padding:10px;margin-bottom:20px;border-radius:5px;border:1px solid #ccc;">
+            <h1 id="main-title">🔐 Iniciar Sesión Administrador</h1>
+            
+            <!-- Formulario de Login -->
+            <form id="login-form" class="form-section" style="max-width: 400px;">
+                <div class="form-group">
+                    <label for="correo">Correo electrónico</label>
+                    <input type="email" id="correo" name="correo" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" required class="form-control">
+                </div>
                 <button type="submit" class="cta-btn" style="width:100%;">Iniciar Sesión</button>
             </form>
+            
+            <!-- Formulario de Registro (oculto inicialmente) -->
+            <form id="registro-form" class="form-section hidden" style="max-width: 550px;">
+                <h3>📝 Registro de Nuevo Administrador</h3>
+                
+                <div class="form-group">
+                    <label for="reg-nombre">Nombre completo</label>
+                    <input type="text" id="reg-nombre" name="nombre" required class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg-correo">Correo electrónico</label>
+                    <input type="email" id="reg-correo" name="correo" required class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg-password">Contraseña</label>
+                    <input type="password" id="reg-password" name="password" required class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg-password-confirm">Confirmar contraseña</label>
+                    <input type="password" id="reg-password-confirm" name="password_confirm" required class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg-rol">Rol solicitado</label>
+                    <select id="reg-rol" name="rol" required class="form-control">
+                        <option value="">Seleccione un rol</option>
+                        <option value="admin_encuestas">Administrador de Encuestas</option>
+                        <option value="admin_reportes">Administrador de Reportes</option>
+                        <option value="admin_general">Administrador General</option>
+                    </select>
+                </div>
+                
+                <div class="validation-section">
+                    <h4>🔑 Validación de Super Usuario</h4>
+                    <div class="form-group">
+                        <label for="super-correo">Correo del Super Usuario</label>
+                        <input type="email" id="super-correo" name="super_correo" required class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="super-password">Contraseña del Super Usuario</label>
+                        <input type="password" id="super-password" name="super_password" required class="form-control">
+                    </div>
+                    
+                    <small>Solo el Super Usuario puede aprobar nuevos administradores</small>
+                </div>
+                
+                <button type="submit" class="cta-btn success-btn" style="width:100%;">Registrar Administrador</button>
+            </form>
+            
+            <!-- Botones de navegación -->
+            <div style="text-align: center; margin-top: 30px;">
+                <button id="btn-mostrar-registro" class="cta-btn btn-nav">📝 Registrarse como Admin</button>
+                <button id="btn-mostrar-login" class="cta-btn btn-nav hidden">🔐 Volver al Login</button>
+            </div>
         </div>
     </section>
 
