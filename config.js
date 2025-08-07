@@ -1,4 +1,14 @@
 
+// Configuración de Supabase
+// ⚠️ IMPORTANTE: Para desarrollo local, se usarán valores demo
+// En producción, reemplaza estos valores con los de tu proyecto Supabase
+
+const SUPABASE_CONFIG = {
+    url: 'https://demo.supabase.co', // URL demo para desarrollo local
+    anonKey: 'demo-anon-key', // Key demo para desarrollo local
+    serviceRoleKey: 'demo-service-role-key' // Key demo para desarrollo local
+};
+
 // Configuración de Sentry para monitoreo de errores
 const SENTRY_CONFIG = {
     // ✅ DSN real configurado
@@ -27,16 +37,6 @@ const SENTRY_CONFIG = {
         }
         return event;
     }
-};
-
-// Configuración de Supabase
-// ⚠️ IMPORTANTE: Para desarrollo local, se usarán valores demo
-// En producción, reemplaza estos valores con los de tu proyecto Supabase
-
-const SUPABASE_CONFIG = {
-    url: 'https://demo.supabase.co', // URL demo para desarrollo local
-    anonKey: 'demo-anon-key', // Key demo para desarrollo local
-    serviceRoleKey: 'demo-service-role-key' // Key demo para desarrollo local
 };
 
 // Configuración de la aplicación
