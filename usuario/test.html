@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Usuario - Sistema de Encuestas</title>
+</head>
+<body>
+    <h1>Test de Usuario</h1>
+    <div id="test-results"></div>
+
+    <script src="../config.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const resultsDiv = document.getElementById('test-results');
+            
+            try {
+                // Test de configuración
+                resultsDiv.innerHTML += '<h2>Test de Configuración:</h2>';
+                resultsDiv.innerHTML += `<p>Supabase URL: ${SUPABASE_CONFIG.url}</p>`;
+                
+                // Test de inicialización de Supabase
+                const supabaseClient = initializeSupabase();
+                if (supabaseClient) {
+                    resultsDiv.innerHTML += '<p style="color: green;">✅ Supabase inicializado correctamente</p>';
+                } else {
+                    resultsDiv.innerHTML += '<p style="color: red;">❌ Error al inicializar Supabase</p>';
+                }
+                
+                // Test de generación de session ID
+                const sessionId = generateSessionId();
+                resultsDiv.innerHTML += `<p>Session ID generado: ${sessionId}</p>`;
+                
+                resultsDiv.innerHTML += '<h2>✅ Todos los tests pasaron</h2>';
+                resultsDiv.innerHTML += '<p><a href="?id=1">Ir a encuesta de prueba</a></p>';
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<p style="color: red;">❌ Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

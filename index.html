@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Encuestas - Página Principal</title>
+    
+    <!-- Sentry SDK -->
+    <script src="https://js.sentry-cdn.com/db9dacf914f7fae45d7ba634f3ff0d70.min.js" crossorigin="anonymous"></script>
+    
+    <link rel="stylesheet" href="assets/common.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 80px 0;
+            margin-bottom: 0;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+        
+        .cta-btn {
+            display: inline-block;
+            padding: 15px 35px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 60px 0;
+        }
+        
+        .feature-card {
+            text-align: center;
+            padding: 40px 30px;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .demo-section {
+            background: #f8f9fa;
+            padding: 60px 0;
+            text-align: center;
+        }
+        
+        .demo-credentials {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 30px auto;
+            max-width: 400px;
+            border-left: 5px solid #28a745;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .cta-btn {
+                width: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>📋 Sistema de Encuestas</h1>
+            <p>Crea, gestiona y analiza encuestas de forma sencilla y profesional</p>
+            
+            <div class="cta-buttons">
+                <a href="admin/" class="cta-btn">
+                    🔧 Panel Administrativo
+                </a>
+                <a href="usuario/?id=demo" class="cta-btn">
+                    📝 Ver Encuesta Demo
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="container">
+        <div class="card text-center">
+            <h2>✨ Características Principales</h2>
+            <p>Un sistema completo y gratuito para gestionar encuestas en línea</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔧</div>
+                <h3>Panel Administrativo</h3>
+                <p>Crea y gestiona encuestas con un editor intuitivo. Soporte para preguntas de opción múltiple, única y texto abierto.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Reportes en Tiempo Real</h3>
+                <p>Visualiza estadísticas y análisis detallados de las respuestas conforme van llegando.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Diseño Responsive</h3>
+                <p>Funciona perfectamente en computadoras, tablets y smartphones. Experiencia optimizada para todos los dispositivos.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Seguro y Confiable</h3>
+                <p>Base de datos segura con PostgreSQL, Row Level Security y hosting gratuito en GitHub Pages.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>Fácil de Usar</h3>
+                <p>Interfaz intuitiva tanto para administradores como para usuarios. No requiere conocimientos técnicos.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>100% Gratuito</h3>
+                <p>Hosting gratuito con GitHub Pages y base de datos gratuita con Supabase. Sin costos ocultos.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="demo-section">
+        <div class="container">
+            <h2>🎯 Prueba el Sistema</h2>
+            <p>Explora todas las funcionalidades con nuestro demo interactivo</p>
+            
+            <div class="demo-credentials">
+                <h3>🔐 Credenciales de Demo</h3>
+                <p><strong>Email:</strong> admin@sistema.com</p>
+                <p><strong>Contraseña:</strong> admin123</p>
+                <p><small>Úsalas para acceder al panel administrativo</small></p>
+            </div>
+            
+            <div class="cta-buttons">
+                <a href="admin/" class="btn btn-primary btn-large">
+                    🔧 Probar Panel Admin
+                </a>
+                <a href="usuario/?id=1" class="btn btn-secondary btn-large">
+                    📝 Responder Encuesta
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Section -->
+    <section class="container">
+        <div class="card">
+            <h2>🛠️ Tecnologías Utilizadas</h2>
+            <div class="features-grid">
+                <div class="text-center">
+                    <h4>Frontend</h4>
+                    <p>HTML5, CSS3, JavaScript Vanilla</p>
+                </div>
+                <div class="text-center">
+                    <h4>Base de Datos</h4>
+                    <p>PostgreSQL con Supabase</p>
+                </div>
+                <div class="text-center">
+                    <h4>Hosting</h4>
+                    <p>GitHub Pages</p>
+                </div>
+                <div class="text-center">
+                    <h4>Seguridad</h4>
+                    <p>Row Level Security (RLS)</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Getting Started Section -->
+    <section class="container">
+        <div class="card">
+            <h2>🚀 Comenzar Ahora</h2>
+            <p>Sigue estos pasos para implementar tu propio sistema de encuestas:</p>
+            
+            <div class="features-grid">
+                <div>
+                    <h4>1️⃣ Configurar Base de Datos</h4>
+                    <p>Crea una cuenta en Supabase y ejecuta el script SQL incluido</p>
+                </div>
+                <div>
+                    <h4>2️⃣ Configurar Proyecto</h4>
+                    <p>Edita el archivo config.js con tus credenciales de Supabase</p>
+                </div>
+                <div>
+                    <h4>3️⃣ Subir a GitHub</h4>
+                    <p>Sube el proyecto a GitHub y activa GitHub Pages</p>
+                </div>
+                <div>
+                    <h4>4️⃣ ¡Listo!</h4>
+                    <p>Tu sistema de encuestas estará disponible en línea</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-20">
+                <a href="SETUP.md" class="btn btn-success btn-large">
+                    📖 Ver Guía Completa
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="header">
+        <div class="container text-center">
+            <p>Sistema de Encuestas - Desarrollado con ❤️ por Alexander</p>
+            <p>Código abierto disponible en GitHub</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script>
+        // Inicializar Sentry al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Inicializando sistema principal...');
+            
+            // Inicializar Sentry
+            const sentryActive = initializeSentry();
+            if (sentryActive) {
+                console.log('✅ Sentry activo');
+                captureSentryMessage('Sistema principal cargado', 'info', {
+                    page: 'index',
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            // Manejo global de errores
+            window.addEventListener('error', (event) => {
+                captureSentryError(event.error, {
+                    page: 'index',
+                    filename: event.filename,
+                    lineno: event.lineno
+                });
+            });
+        });
+    </script>
+</body>
+</html>

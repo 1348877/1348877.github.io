@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo - Sistema de Encuestas</title>
+    
+    <!-- Sentry SDK -->
+    <script src="https://js.sentry-cdn.com/db9dacf914f7fae45d7ba634f3ff0d70.min.js" crossorigin="anonymous"></script>
+    
+    <link rel="stylesheet" href="../assets/common.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1>🔧 Panel Administrativo</h1>
+            <p class="subtitle">Gestión de encuestas y reportes</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Mensaje container -->
+        <div id="message-container"></div>
+
+        <!-- Login Section -->
+        <div id="login-section" class="card">
+            <h2>🔐 Acceso Administrativo SENATI</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="admin-email">Correo electrónico:</label>
+                    <input type="email" id="admin-email" class="form-control" required 
+                           placeholder="admin@senati.pe" value="admin@senati.pe">
+                </div>
+                <div class="form-group">
+                    <label for="admin-password">Contraseña:</label>
+                    <input type="password" id="admin-password" class="form-control" required 
+                           placeholder="Ingrese su contraseña" value="admin123">
+                </div>
+                <button type="submit" class="btn btn-primary btn-large">Iniciar Sesión</button>
+                
+                <div class="login-help">
+                    <p><small>Solo personal autorizado de SENATI</small></p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="admin-dashboard" class="hidden">
+            <!-- Navigation -->
+            <div class="card">
+                <div class="flex-between">
+                    <h2>📊 Dashboard</h2>
+                    <div>
+                        <span id="admin-welcome" class="welcome-text"></span>
+                        <button id="logout-btn" class="btn btn-secondary btn-small">Cerrar Sesión</button>
+                    </div>
+                </div>
+                
+                <div class="dashboard-nav">
+                    <button id="nav-encuestas" class="btn btn-primary nav-btn active">📝 Encuestas</button>
+                    <button id="nav-crear" class="btn btn-success nav-btn">➕ Crear Encuesta</button>
+                    <button id="nav-reportes" class="btn btn-warning nav-btn">📈 Reportes</button>
+                    <button id="nav-permisos" class="btn btn-info nav-btn">🔐 Gestionar Permisos</button>
+                    <a href="../limpiar.html" class="btn btn-danger nav-btn" style="text-decoration: none;">🧹 Limpiar Datos</a>
+                </div>
+            </div>
+
+            <!-- Sección: Lista de Encuestas -->
+            <div id="section-encuestas" class="admin-section">
+                <div class="card">
+                    <h2>📝 Mis Encuestas</h2>
+                    <div id="encuestas-loading" class="loading hidden">
+                        <div class="spinner"></div>
+                        <p>Cargando encuestas...</p>
+                    </div>
+                    <div id="encuestas-list"></div>
+                </div>
+            </div>
+
+            <!-- Sección: Crear/Editar Encuesta -->
+            <div id="section-crear" class="admin-section hidden">
+                <div class="card">
+                    <h2 id="form-title">➕ Crear Nueva Encuesta</h2>
+                    <form id="encuesta-form">
+                        <input type="hidden" id="encuesta-id" value="">
+                        
+                        <div class="form-group">
+                            <label for="encuesta-titulo">Título de la encuesta:</label>
+                            <input type="text" id="encuesta-titulo" class="form-control" required 
+                                   maxlength="255" placeholder="Ej: Evaluación de servicios estudiantiles">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="encuesta-descripcion">Descripción (opcional):</label>
+                            <textarea id="encuesta-descripcion" class="form-control" 
+                                    maxlength="1000" placeholder="Descripción detallada de la encuesta..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="flex-between">
+                                <label>Preguntas:</label>
+                                <button type="button" id="add-question-btn" class="btn btn-success btn-small">
+                                    ➕ Agregar Pregunta
+                                </button>
+                            </div>
+                            <div id="questions-container" class="mt-20"></div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" id="save-encuesta-btn" class="btn btn-primary btn-large">
+                                💾 Guardar Encuesta
+                            </button>
+                            <button type="button" id="cancel-edit-btn" class="btn btn-secondary">
+                                ❌ Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sección: Reportes -->
+            <div id="section-reportes" class="admin-section hidden">
+                <div class="card">
+                    <h2>📈 Reportes y Estadísticas</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3 id="total-encuestas">0</h3>
+                            <p>Total Encuestas</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="total-respuestas">0</h3>
+                            <p>Total Respuestas</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="encuestas-activas">0</h3>
+                            <p>Encuestas Activas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mt-20">
+                        <label for="reporte-encuesta">Seleccionar encuesta para reporte detallado:</label>
+                        <select id="reporte-encuesta" class="form-control">
+                            <option value="">Seleccione una encuesta...</option>
+                        </select>
+                    </div>
+                    
+                    <div id="reporte-detallado" class="mt-20"></div>
+                </div>
+            </div>
+
+            <!-- Sección: Gestionar Permisos -->
+            <div id="section-permisos" class="admin-section hidden">
+                <div class="card">
+                    <h2>🔐 Gestión de Permisos y Módulos</h2>
+                    
+                    <!-- Validar Solicitudes de Nuevos Admin -->
+                    <div class="permisos-subsection">
+                        <h3>👥 Solicitudes de Nuevos Administradores</h3>
+                        <div id="solicitudes-admin">
+                            <div class="empty-state">
+                                <p>No hay solicitudes pendientes</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gestionar Permisos y Módulos -->
+                    <div class="permisos-subsection">
+                        <h3>⚙️ Gestionar Permisos del Sistema</h3>
+                        <div class="permisos-grid">
+                            <div class="permiso-card">
+                                <h4>📝 Módulo de Encuestas</h4>
+                                <p>Crear, editar y eliminar encuestas</p>
+                                <label class="switch">
+                                    <input type="checkbox" id="perm-encuestas" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="permiso-card">
+                                <h4>📊 Módulo de Reportes</h4>
+                                <p>Generar y visualizar reportes</p>
+                                <label class="switch">
+                                    <input type="checkbox" id="perm-reportes" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="permiso-card">
+                                <h4>👥 Gestión de Usuarios</h4>
+                                <p>Administrar usuarios del sistema</p>
+                                <label class="switch">
+                                    <input type="checkbox" id="perm-usuarios" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="permiso-card">
+                                <h4>🔧 Configuración Sistema</h4>
+                                <p>Acceso a configuraciones globales</p>
+                                <label class="switch">
+                                    <input type="checkbox" id="perm-config" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button class="btn btn-success btn-large" onclick="savePermisos()">
+                                💾 Guardar Permisos
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Ver Reportes Globales del Sistema -->
+                    <div class="permisos-subsection">
+                        <h3>📈 Reportes Globales del Sistema</h3>
+                        <div class="reportes-globales">
+                            <div class="reporte-global-card">
+                                <h4>📊 Estadísticas Generales</h4>
+                                <div class="stats-mini-grid">
+                                    <div class="stat-mini">
+                                        <span class="stat-number" id="total-administradores">0</span>
+                                        <span class="stat-label">Administradores</span>
+                                    </div>
+                                    <div class="stat-mini">
+                                        <span class="stat-number" id="total-usuarios-sistema">0</span>
+                                        <span class="stat-label">Usuarios Totales</span>
+                                    </div>
+                                    <div class="stat-mini">
+                                        <span class="stat-number" id="encuestas-sistema">0</span>
+                                        <span class="stat-label">Encuestas Sistema</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Template -->
+    <template id="question-template">
+        <div class="question-item" data-question-index="">
+            <div class="question-header">
+                <div class="form-group">
+                    <label>Pregunta:</label>
+                    <input type="text" class="form-control question-text" required 
+                           placeholder="Escriba su pregunta aquí...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo de pregunta:</label>
+                    <select class="form-control question-type">
+                        <option value="single_choice">Selección única</option>
+                        <option value="multiple_choice">Selección múltiple</option>
+                        <option value="open_text">Texto abierto</option>
+                    </select>
+                </div>
+                
+                <div class="question-actions">
+                    <button type="button" class="btn btn-danger btn-small remove-question-btn">
+                        🗑️ Eliminar
+                    </button>
+                </div>
+            </div>
+            
+            <div class="alternatives-section">
+                <div class="flex-between">
+                    <label>Opciones de respuesta:</label>
+                    <button type="button" class="btn btn-success btn-small add-alternative-btn">
+                        ➕ Agregar Opción
+                    </button>
+                </div>
+                <div class="alternatives-container"></div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Alternative Template -->
+    <template id="alternative-template">
+        <div class="alternative-item-admin">
+            <div class="flex-between">
+                <input type="text" class="form-control alternative-text" 
+                       placeholder="Texto de la opción..." required>
+                <button type="button" class="btn btn-danger btn-small remove-alternative-btn">
+                    ❌
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js?v=14"></script>
+    <script src="script.js?v=14"></script>
+    
+    <script>
+        // Inicialización mejorada para admin
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Inicializando panel administrativo...');
+            
+            // Inicializar Sentry con contexto de admin
+            const sentryActive = initializeSentry();
+            if (sentryActive) {
+                setSentryUser({
+                    role: 'admin',
+                    page: 'admin-panel'
+                });
+                
+                captureSentryMessage('Panel administrativo cargado', 'info', {
+                    page: 'admin',
+                    userAgent: navigator.userAgent,
+                    timestamp: new Date().toISOString()
+                });
+                
+                console.log('✅ Sentry activo para admin');
+            }
+            
+            // Manejo de errores específicos para admin
+            window.addEventListener('error', (event) => {
+                captureSentryError(event.error, {
+                    page: 'admin',
+                    context: 'admin-panel',
+                    filename: event.filename,
+                    lineno: event.lineno,
+                    colno: event.colno
+                });
+            });
+            
+            console.log('✅ Panel administrativo inicializado');
+        });
+    </script>
+</body>
+</html>

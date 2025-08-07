@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responder Encuesta - Sistema de Encuestas</title>
+    
+    <!-- Sentry SDK -->
+    <script src="https://js.sentry-cdn.com/db9dacf914f7fae45d7ba634f3ff0d70.min.js" crossorigin="anonymous"></script>
+    
+    <link rel="stylesheet" href="../assets/common.css">
+    <link rel="stylesheet" href="styles.css?v=8">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1>📋 Encuesta Estudiantil</h1>
+            <p class="subtitle">Tu opinión es importante para nosotros</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Message container -->
+        <div id="message-container"></div>
+
+        <!-- Loading Section -->
+        <div id="loading-section" class="card text-center">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Cargando encuesta...</p>
+            </div>
+        </div>
+
+        <!-- Encuesta Not Found -->
+        <div id="not-found-section" class="card text-center hidden">
+            <h2>🚫 Encuesta no encontrada</h2>
+            <p>Lo sentimos, la encuesta que buscas no existe o ya no está disponible.</p>
+            <div class="error-details">
+                <p>Posibles causas:</p>
+                <ul>
+                    <li>El enlace es incorrecto</li>
+                    <li>La encuesta ha sido desactivada</li>
+                    <li>La encuesta ha sido eliminada</li>
+                </ul>
+            </div>
+            <button class="btn btn-primary" onclick="window.location.reload()">
+                🔄 Intentar de nuevo
+            </button>
+        </div>
+
+        <!-- Encuesta Form -->
+        <div id="encuesta-section" class="hidden">
+            <!-- Encuesta Header -->
+            <div class="card encuesta-header">
+                <h2 id="encuesta-titulo"></h2>
+                <p id="encuesta-descripcion" class="encuesta-descripcion"></p>
+                <div class="encuesta-info">
+                    <span id="total-preguntas" class="info-badge">0 preguntas</span>
+                    <span class="info-badge">⏱️ Tiempo estimado: <span id="tiempo-estimado">5 min</span></span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="card progress-container">
+                <div class="progress-info">
+                    <span>Progreso: <span id="progreso-texto">0/0</span></span>
+                    <span id="progreso-porcentaje">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Questions Form -->
+            <form id="respuestas-form">
+                <div id="questions-container"></div>
+                
+                <!-- User Info (Optional) -->
+                <div class="card user-info-section">
+                    <h3>📝 Información personal (opcional)</h3>
+                    <p>Ayúdanos proporcionando algunos datos básicos:</p>
+                    
+                    <div class="form-group">
+                        <label for="user-nombre">Nombre completo:</label>
+                        <input type="text" id="user-nombre" class="form-control" 
+                               placeholder="Tu nombre completo (opcional)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="user-correo">Correo electrónico:</label>
+                        <input type="email" id="user-correo" class="form-control" 
+                               placeholder="tu@correo.com (opcional)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="user-carrera">Carrera:</label>
+                        <input type="text" id="user-carrera" class="form-control" 
+                               placeholder="Tu carrera o programa de estudios (opcional)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="user-genero">Género:</label>
+                        <select id="user-genero" class="form-control">
+                            <option value="">Seleccionar (opcional)</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Femenino">Femenino</option>
+                            <option value="Otro">Otro</option>
+                            <option value="Prefiero no decir">Prefiero no decir</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Submit Section -->
+                <div class="card submit-section">
+                    <div class="submit-info">
+                        <p>✅ Revisa tus respuestas antes de enviar</p>
+                        <p>⚠️ Una vez enviado no podrás modificar tus respuestas</p>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" id="review-btn" class="btn btn-secondary btn-large">
+                            👁️ Revisar respuestas
+                        </button>
+                        <button type="submit" id="submit-btn" class="btn btn-primary btn-large">
+                            📤 Enviar encuesta
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Error Section (cuando datos son incorrectos) -->
+        <div id="error-section" class="card text-center hidden">
+            <div class="error-animation">
+                <div class="error-icon">❌</div>
+                <h2>Error al enviar la encuesta</h2>
+                <p>Hubo un problema al procesar tus respuestas.</p>
+            </div>
+            
+            <div class="error-details">
+                <p id="error-message">Por favor verifica que todos los campos obligatorios estén completos.</p>
+            </div>
+            
+            <div class="error-actions">
+                <button class="btn btn-primary btn-large" onclick="retrySubmit()">
+                    🔄 Intentar de nuevo
+                </button>
+                <button class="btn btn-secondary" onclick="cancelSubmit()">
+                    ❌ Cancelar
+                </button>
+            </div>
+        </div>
+        <!-- Success Section -->
+        <div id="success-section" class="card text-center hidden">
+            <div class="success-animation">
+                <div class="success-icon">✅</div>
+                <h2>¡Gracias por tu participación!</h2>
+                <p>Tu encuesta ha sido registrada exitosamente.</p>
+            </div>
+            
+            <div class="success-details">
+                <p>Tus respuestas han sido guardadas correctamente y serán muy útiles para mejorar nuestros servicios.</p>
+                <p><strong>Fecha de registro:</strong> <span id="fecha-envio"></span></p>
+            </div>
+            
+            <div class="success-actions">
+                <button class="btn btn-primary" onclick="window.close()">
+                    ✅ Cerrar
+                </button>
+            </div>
+        </div>
+
+        <!-- Review Modal -->
+        <div id="review-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>👁️ Revisar respuestas</h3>
+                    <button class="modal-close" onclick="closeReviewModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="review-content"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeReviewModal()">
+                        ❌ Cerrar
+                    </button>
+                    <button class="btn btn-primary" onclick="closeReviewModal()">
+                        ✏️ Continuar editando
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Templates -->
+    
+    <!-- Single Choice Question -->
+    <template id="single-choice-template">
+        <div class="question-card" data-question-id="" data-question-type="single_choice">
+            <div class="question-header">
+                <h4 class="question-text"></h4>
+                <span class="question-number"></span>
+            </div>
+            <div class="question-body">
+                <div class="alternatives-container"></div>
+            </div>
+            <div class="question-footer">
+                <span class="required-indicator">* Campo obligatorio</span>
+            </div>
+        </div>
+    </template>
+
+    <!-- Multiple Choice Question -->
+    <template id="multiple-choice-template">
+        <div class="question-card" data-question-id="" data-question-type="multiple_choice">
+            <div class="question-header">
+                <h4 class="question-text"></h4>
+                <span class="question-number"></span>
+            </div>
+            <div class="question-body">
+                <p class="instruction">Puedes seleccionar múltiples opciones:</p>
+                <div class="alternatives-container"></div>
+            </div>
+            <div class="question-footer">
+                <span class="required-indicator">* Campo obligatorio</span>
+            </div>
+        </div>
+    </template>
+
+    <!-- Open Text Question -->
+    <template id="open-text-template">
+        <div class="question-card" data-question-id="" data-question-type="open_text">
+            <div class="question-header">
+                <h4 class="question-text"></h4>
+                <span class="question-number"></span>
+            </div>
+            <div class="question-body">
+                <textarea class="form-control open-text-answer" 
+                          placeholder="Escribe tu respuesta aquí..." 
+                          rows="4"></textarea>
+                <div class="char-counter">
+                    <span class="char-count">0</span> / 1000 caracteres
+                </div>
+            </div>
+            <div class="question-footer">
+                <span class="required-indicator">* Campo obligatorio</span>
+            </div>
+        </div>
+    </template>
+
+    <!-- Alternative Templates -->
+    <template id="radio-alternative-template">
+        <div class="alternative-item">
+            <input type="radio" class="alternative-input" name="" value="">
+            <label class="alternative-label"></label>
+        </div>
+    </template>
+
+    <template id="checkbox-alternative-template">
+        <div class="alternative-item">
+            <input type="checkbox" class="alternative-input" value="">
+            <label class="alternative-label"></label>
+        </div>
+    </template>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js?v=10"></script>
+    <script src="script.js?v=10"></script>
+    
+    <script>
+        // Inicialización para usuarios
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Inicializando interfaz de usuario...');
+            
+            // Inicializar Sentry con contexto de usuario
+            const sentryActive = initializeSentry();
+            if (sentryActive) {
+                setSentryUser({
+                    role: 'student',
+                    page: 'survey-interface'
+                });
+                
+                captureSentryMessage('Interfaz de usuario cargada', 'info', {
+                    page: 'usuario',
+                    userAgent: navigator.userAgent,
+                    timestamp: new Date().toISOString()
+                });
+                
+                console.log('✅ Sentry activo para usuarios');
+            }
+            
+            // Manejo de errores específicos para usuarios
+            window.addEventListener('error', (event) => {
+                captureSentryError(event.error, {
+                    page: 'usuario',
+                    context: 'survey-response',
+                    filename: event.filename,
+                    lineno: event.lineno,
+                    colno: event.colno,
+                    url: window.location.href
+                });
+            });
+            
+            console.log('✅ Interfaz de usuario inicializada');
+        });
+    </script>
+</body>
+</html>
