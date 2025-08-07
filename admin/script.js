@@ -953,14 +953,8 @@ async function deleteEncuesta(encuestaId, titulo) {
     }
     
     try {
-        // En modo desarrollo, simular eliminación exitosa
-        if (SUPABASE_CONFIG.url === 'https://demo.supabase.co') {
-            showMessage('Encuesta eliminada exitosamente (modo demo).', 'success');
-            loadEncuestas();
-            return;
-        }
+        console.log(`🗑️ Iniciando eliminación de encuesta ${encuestaId}: "${titulo}"`);
         
-        // Para producción con Supabase real
         // Eliminar en orden correcto debido a restricciones de claves foráneas
         
         // 1. Primero obtener todas las preguntas de la encuesta
@@ -970,10 +964,13 @@ async function deleteEncuesta(encuestaId, titulo) {
             .eq('id_encuesta', encuestaId);
             
         if (preguntasError) throw preguntasError;
+        console.log(`🔍 Preguntas encontradas para eliminar:`, preguntas?.length || 0);
         
         // 2. Eliminar respuestas y alternativas para cada pregunta
         if (preguntas && preguntas.length > 0) {
             for (const pregunta of preguntas) {
+                console.log(`🗑️ Eliminando respuestas y alternativas para pregunta ${pregunta.id_pregunta}`);
+                
                 await supabase
                     .from('respuestas')
                     .delete()
@@ -987,12 +984,14 @@ async function deleteEncuesta(encuestaId, titulo) {
         }
         
         // 3. Eliminar preguntas
+        console.log(`🗑️ Eliminando preguntas de la encuesta ${encuestaId}`);
         await supabase
             .from('preguntas')
             .delete()
             .eq('id_encuesta', encuestaId);
         
         // 4. Finalmente eliminar la encuesta
+        console.log(`🗑️ Eliminando encuesta ${encuestaId}`);
         const { error } = await supabase
             .from('encuestas')
             .delete()
@@ -1000,11 +999,12 @@ async function deleteEncuesta(encuestaId, titulo) {
             
         if (error) throw error;
         
+        console.log(`✅ Encuesta ${encuestaId} eliminada exitosamente`);
         showMessage('Encuesta eliminada exitosamente.', 'success');
         loadEncuestas();
         
     } catch (error) {
-        console.error('Error deleting encuesta:', error);
+        console.error('❌ Error eliminando encuesta:', error);
         showMessage('Error al eliminar la encuesta: ' + error.message, 'error');
     }
 }

@@ -284,7 +284,7 @@ function initializeSupabase() {
                 // Asegurar que siempre tenemos datos del Super Usuario
                 if (table === 'super_su' && mockData.length === 0) {
                     const superUserData = [{
-                        id_super: 1,
+                        id_super_su: 0, // ID único para Super Usuario
                         nombre: 'Super Administrador',
                         correo: 'superadmin@senati.pe',
                         contraseña: 'superadmin123',
@@ -297,12 +297,12 @@ function initializeSupabase() {
                 // Asegurar que siempre tenemos datos del Admin demo
                 if (table === 'admin' && mockData.length === 0) {
                     const adminData = [{
-                        id_admin: 1,
+                        id_admin: 1, // ID único para Admin normal
                         nombre: 'Admin SENATI',
                         correo: 'admin@senati.pe',
                         contraseña: 'admin123',
                         rol: 'admin_general',
-                        id_super_admin: 1,
+                        id_super_admin: 0, // Referencia al Super Usuario
                         created_at: new Date().toISOString()
                     }];
                     setStoredData('admin', adminData);
