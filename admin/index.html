@@ -66,6 +66,7 @@
                     <button id="nav-crear" class="btn btn-success nav-btn">➕ Crear Encuesta</button>
                     <button id="nav-reportes" class="btn btn-warning nav-btn">📈 Reportes</button>
                     <button id="nav-permisos" class="btn btn-info nav-btn">🔐 Gestionar Permisos</button>
+                    <button id="nav-solicitudes" class="btn btn-purple nav-btn hidden">👥 Solicitudes Admin</button>
                     <a href="#" class="btn btn-danger nav-btn" style="text-decoration: none;" onclick="alert('Función de limpieza disponible en desarrollo local')">🧹 Limpiar Datos</a>
                 </div>
             </div>
@@ -364,6 +365,39 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección: Gestión de Solicitudes (Solo Super Usuario) -->
+            <div id="section-solicitudes" class="admin-section hidden">
+                <div class="card">
+                    <h2>👥 Gestión de Solicitudes de Administradores</h2>
+                    <p class="section-description">
+                        Como Super Usuario, puedes revisar y aprobar solicitudes de nuevos administradores.
+                        Asigna roles específicos según las necesidades institucionales.
+                    </p>
+                    
+                    <div id="solicitudes-loading" class="loading hidden">
+                        <div class="spinner"></div>
+                        <p>Cargando solicitudes...</p>
+                    </div>
+                    
+                    <div id="solicitudes-container">
+                        <div class="solicitudes-filter">
+                            <label for="filter-estado">Filtrar por estado:</label>
+                            <select id="filter-estado" class="form-control" style="width: 200px; display: inline-block;">
+                                <option value="all">Todas las solicitudes</option>
+                                <option value="pendiente">Pendientes</option>
+                                <option value="aprobada">Aprobadas</option>
+                                <option value="rechazada">Rechazadas</option>
+                            </select>
+                            <button id="refresh-solicitudes" class="btn btn-primary btn-small">🔄 Actualizar</button>
+                        </div>
+                        
+                        <div id="solicitudes-list">
+                            <!-- Las solicitudes se cargarán aquí dinámicamente -->
                         </div>
                     </div>
                 </div>

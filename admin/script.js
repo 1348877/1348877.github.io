@@ -130,6 +130,7 @@ function initializeEventListeners() {
     document.getElementById('nav-crear').addEventListener('click', () => showSection('crear'));
     document.getElementById('nav-reportes').addEventListener('click', () => showSection('reportes'));
     document.getElementById('nav-permisos').addEventListener('click', () => showSection('permisos'));
+    document.getElementById('nav-solicitudes').addEventListener('click', () => showSection('solicitudes'));
     
     // Encuesta form
     document.getElementById('encuesta-form').addEventListener('submit', handleSaveEncuesta);
@@ -215,6 +216,14 @@ function showAdminDashboard() {
     document.getElementById('admin-dashboard').classList.remove('hidden');
     document.getElementById('admin-welcome').textContent = `Bienvenido, ${currentAdmin.nombre}`;
     
+    // Mostrar botón de solicitudes solo para Super Usuario
+    const solicitudesBtn = document.getElementById('nav-solicitudes');
+    if (currentAdmin.rol === 'super_admin') {
+        solicitudesBtn.classList.remove('hidden');
+    } else {
+        solicitudesBtn.classList.add('hidden');
+    }
+    
     showSection('encuestas');
     loadDashboardData();
 }
@@ -253,6 +262,14 @@ function showSection(sectionName) {
             break;
         case 'permisos':
             loadPermisos();
+            break;
+        case 'solicitudes':
+            if (currentAdmin.rol === 'super_admin') {
+                loadSolicitudes();
+            } else {
+                showMessage('No tienes permisos para acceder a esta sección.', 'warning');
+                showSection('encuestas');
+            }
             break;
     }
 }
@@ -2160,6 +2177,252 @@ function savePermisos() {
     showMessage('Permisos del sistema actualizados correctamente!', 'success');
     
     console.log('Permisos guardados:', permisos);
+}
+
+// ================================
+// GESTIÓN DE SOLICITUDES DE ADMINISTRADORES
+// ================================
+
+// Cargar solicitudes de administradores
+async function loadSolicitudes() {
+    const loadingDiv = document.getElementById('solicitudes-loading');
+    const containerDiv = document.getElementById('solicitudes-container');
+    const listDiv = document.getElementById('solicitudes-list');
+    
+    loadingDiv.classList.remove('hidden');
+    containerDiv.classList.add('hidden');
+    
+    try {
+        const { data: solicitudes, error } = await supabase
+            .from('solicitudes_admin')
+            .select('*')
+            .order('fecha_solicitud', { ascending: false });
+
+        if (error) {
+            console.error('❌ Error cargando solicitudes:', error);
+            throw error;
+        }
+
+        loadingDiv.classList.add('hidden');
+        containerDiv.classList.remove('hidden');
+
+        if (!solicitudes || solicitudes.length === 0) {
+            listDiv.innerHTML = `
+                <div class="empty-solicitudes">
+                    <div class="icon">📮</div>
+                    <h3>No hay solicitudes</h3>
+                    <p>No se encontraron solicitudes de administradores.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Agregar event listener para filtro
+        document.getElementById('filter-estado').addEventListener('change', filterSolicitudes);
+        document.getElementById('refresh-solicitudes').addEventListener('click', loadSolicitudes);
+
+        displaySolicitudes(solicitudes);
+
+    } catch (error) {
+        console.error('❌ Error:', error);
+        loadingDiv.classList.add('hidden');
+        containerDiv.classList.remove('hidden');
+        listDiv.innerHTML = `
+            <div class="error-state">
+                <h3>Error al cargar solicitudes</h3>
+                <p>${error.message}</p>
+                <button class="btn btn-primary" onclick="loadSolicitudes()">🔄 Reintentar</button>
+            </div>
+        `;
+    }
+}
+
+// Mostrar solicitudes en la UI
+function displaySolicitudes(solicitudes) {
+    const listDiv = document.getElementById('solicitudes-list');
+    
+    const html = solicitudes.map(solicitud => {
+        const fechaSolicitud = new Date(solicitud.fecha_solicitud).toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        const estadoClass = `estado-${solicitud.estado}`;
+        const estadoTexto = {
+            'pendiente': 'Pendiente',
+            'aprobada': 'Aprobada',
+            'rechazada': 'Rechazada'
+        }[solicitud.estado] || solicitud.estado;
+
+        const accionesHtml = solicitud.estado === 'pendiente' ? `
+            <div class="rol-selector">
+                <label for="rol-${solicitud.id_solicitud}">Asignar rol:</label>
+                <select id="rol-${solicitud.id_solicitud}" class="form-control">
+                    <option value="admin_encuestas">Administrador de Encuestas</option>
+                    <option value="admin_reportes">Administrador de Reportes</option>
+                    <option value="admin_general">Administrador General</option>
+                </select>
+            </div>
+            <div class="solicitud-acciones">
+                <button class="btn btn-success" onclick="aprobarSolicitud(${solicitud.id_solicitud})">
+                    ✅ Aprobar
+                </button>
+                <button class="btn btn-danger" onclick="rechazarSolicitud(${solicitud.id_solicitud})">
+                    ❌ Rechazar
+                </button>
+            </div>
+        ` : `
+            <div class="solicitud-acciones">
+                <span class="estado-final">Estado: ${estadoTexto}</span>
+                ${solicitud.fecha_respuesta ? `<small>Fecha: ${new Date(solicitud.fecha_respuesta).toLocaleDateString('es-ES')}</small>` : ''}
+                ${solicitud.rol_asignado ? `<small>Rol asignado: ${getRolDisplayName(solicitud.rol_asignado)}</small>` : ''}
+            </div>
+        `;
+
+        return `
+            <div class="solicitud-card" data-estado="${solicitud.estado}">
+                <div class="solicitud-header">
+                    <div class="solicitud-info">
+                        <h4>${solicitud.nombre}</h4>
+                        <p><strong>Correo:</strong> ${solicitud.correo}</p>
+                        <p><strong>Fecha de solicitud:</strong> ${fechaSolicitud}</p>
+                    </div>
+                    <div class="solicitud-estado ${estadoClass}">
+                        ${estadoTexto}
+                    </div>
+                </div>
+                
+                <div class="solicitud-justificacion">
+                    <h5>Justificación:</h5>
+                    <p>${solicitud.justificacion}</p>
+                </div>
+                
+                ${accionesHtml}
+            </div>
+        `;
+    }).join('');
+
+    listDiv.innerHTML = html;
+}
+
+// Filtrar solicitudes por estado
+function filterSolicitudes() {
+    const filtro = document.getElementById('filter-estado').value;
+    const tarjetas = document.querySelectorAll('.solicitud-card');
+
+    tarjetas.forEach(tarjeta => {
+        const estado = tarjeta.getAttribute('data-estado');
+        if (filtro === 'all' || estado === filtro) {
+            tarjeta.style.display = 'block';
+        } else {
+            tarjeta.style.display = 'none';
+        }
+    });
+}
+
+// Aprobar solicitud
+async function aprobarSolicitud(idSolicitud) {
+    try {
+        const rolSelector = document.getElementById(`rol-${idSolicitud}`);
+        const rolAsignado = rolSelector.value;
+
+        if (!rolAsignado) {
+            showMessage('Por favor selecciona un rol para el nuevo administrador.', 'warning');
+            return;
+        }
+
+        // 1. Obtener datos de la solicitud
+        const { data: solicitud, error: solicitudError } = await supabase
+            .from('solicitudes_admin')
+            .select('*')
+            .eq('id_solicitud', idSolicitud)
+            .single();
+
+        if (solicitudError) throw solicitudError;
+
+        // 2. Crear nuevo administrador
+        const nuevoAdmin = {
+            id_admin: Date.now(), // ID temporal para mock
+            nombre: solicitud.nombre,
+            correo: solicitud.correo,
+            contraseña: solicitud.contraseña,
+            rol: rolAsignado,
+            id_super_admin: currentAdmin.id,
+            created_at: new Date().toISOString()
+        };
+
+        const { data: adminCreado, error: adminError } = await supabase
+            .from('admin')
+            .insert([nuevoAdmin])
+            .select()
+            .single();
+
+        if (adminError) throw adminError;
+
+        // 3. Actualizar solicitud como aprobada
+        const { error: updateError } = await supabase
+            .from('solicitudes_admin')
+            .update({
+                estado: 'aprobada',
+                fecha_respuesta: new Date().toISOString(),
+                rol_asignado: rolAsignado,
+                id_super_admin: currentAdmin.id
+            })
+            .eq('id_solicitud', idSolicitud);
+
+        if (updateError) throw updateError;
+
+        showMessage(`¡Solicitud aprobada! ${solicitud.nombre} ahora es ${getRolDisplayName(rolAsignado)}.`, 'success');
+        
+        // Recargar solicitudes
+        loadSolicitudes();
+
+    } catch (error) {
+        console.error('❌ Error aprobando solicitud:', error);
+        showMessage('Error al aprobar la solicitud: ' + error.message, 'error');
+    }
+}
+
+// Rechazar solicitud
+async function rechazarSolicitud(idSolicitud) {
+    if (!confirm('¿Estás seguro de que deseas rechazar esta solicitud?')) {
+        return;
+    }
+
+    try {
+        const { error } = await supabase
+            .from('solicitudes_admin')
+            .update({
+                estado: 'rechazada',
+                fecha_respuesta: new Date().toISOString(),
+                id_super_admin: currentAdmin.id
+            })
+            .eq('id_solicitud', idSolicitud);
+
+        if (error) throw error;
+
+        showMessage('Solicitud rechazada.', 'info');
+        
+        // Recargar solicitudes
+        loadSolicitudes();
+
+    } catch (error) {
+        console.error('❌ Error rechazando solicitud:', error);
+        showMessage('Error al rechazar la solicitud: ' + error.message, 'error');
+    }
+}
+
+// Obtener nombre display del rol
+function getRolDisplayName(rol) {
+    const roles = {
+        'admin_encuestas': 'Administrador de Encuestas',
+        'admin_reportes': 'Administrador de Reportes', 
+        'admin_general': 'Administrador General'
+    };
+    return roles[rol] || rol;
 }
 
 // Función para asignar rol admin (cuando haya solicitudes)

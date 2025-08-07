@@ -188,8 +188,12 @@
             </form>
             
             <!-- Formulario de Registro (oculto inicialmente) -->
-            <form id="registro-form" class="form-section hidden" style="max-width: 600px;">
-                <h3>📝 Registro de Nuevo Administrador</h3>
+            <form id="registro-form" class="form-section hidden" style="max-width: 500px;">
+                <h3>📝 Solicitar Acceso como Administrador</h3>
+                <p style="color: rgba(255,255,255,0.9); margin-bottom: 25px; font-size: 14px; line-height: 1.5;">
+                    Tu solicitud será enviada al Super Usuario para su revisión y aprobación. 
+                    El Super Usuario asignará tu rol y te notificará cuando puedas acceder.
+                </p>
                 
                 <div class="form-group">
                     <label for="reg-nombre">Nombre completo</label>
@@ -198,13 +202,13 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="reg-correo">Correo electrónico</label>
+                    <label for="reg-correo">Correo electrónico SENATI</label>
                     <input type="email" id="reg-correo" name="correo" required class="form-control"
-                           placeholder="nuevo-admin@senati.pe">
+                           placeholder="tu-nombre@senati.pe">
                 </div>
                 
                 <div class="form-group">
-                    <label for="reg-password">Contraseña</label>
+                    <label for="reg-password">Contraseña deseada</label>
                     <input type="password" id="reg-password" name="password" required class="form-control"
                            placeholder="Mínimo 6 caracteres">
                 </div>
@@ -216,38 +220,28 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="reg-rol">Rol solicitado</label>
-                    <select id="reg-rol" name="rol" required class="form-control">
-                        <option value="">Seleccione un rol</option>
-                        <option value="admin_encuestas">Administrador de Encuestas</option>
-                        <option value="admin_reportes">Administrador de Reportes</option>
-                        <option value="admin_general">Administrador General</option>
-                    </select>
+                    <label for="reg-justificacion">Justificación de acceso</label>
+                    <textarea id="reg-justificacion" name="justificacion" required class="form-control" 
+                              placeholder="Explica brevemente por qué necesitas acceso como administrador (ej: gestión de encuestas académicas, reportes institucionales, etc.)"
+                              rows="3" style="resize: vertical; min-height: 80px;"></textarea>
                 </div>
                 
-                <div class="validation-section">
-                    <h4>🔑 Validación de Super Usuario</h4>
-                    <div class="form-group">
-                        <label for="super-correo">Correo del Super Usuario</label>
-                        <input type="email" id="super-correo" name="super_correo" required class="form-control" 
-                               placeholder="superadmin@senati.pe">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="super-password">Contraseña del Super Usuario</label>
-                        <input type="password" id="super-password" name="super_password" required class="form-control"
-                               placeholder="Contraseña del Super Usuario">
-                    </div>
-                    
-                    <small>Solo el Super Usuario puede aprobar nuevos administradores</small>
+                <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #17a2b8;">
+                    <h4 style="color: white; margin-bottom: 10px; font-size: 1rem;">ℹ️ Proceso de Aprobación</h4>
+                    <ul style="color: rgba(255,255,255,0.9); font-size: 13px; margin: 0; padding-left: 20px;">
+                        <li>Tu solicitud será enviada al Super Usuario</li>
+                        <li>El Super Usuario revisará tu justificación</li>
+                        <li>Si es aprobada, se te asignará un rol específico</li>
+                        <li>Recibirás notificación para poder iniciar sesión</li>
+                    </ul>
                 </div>
                 
-                <button type="submit" class="cta-btn success-btn" style="width:100%; font-size: 16px;">Registrar Administrador</button>
+                <button type="submit" class="cta-btn success-btn" style="width:100%; font-size: 16px;">📨 Enviar Solicitud</button>
             </form>
             
             <!-- Botones de navegación -->
             <div class="nav-buttons">
-                <button id="btn-mostrar-registro" class="cta-btn btn-nav">📝 Registrarse como Admin</button>
+                <button id="btn-mostrar-registro" class="cta-btn btn-nav">📝 Solicitar Acceso Admin</button>
                 <button id="btn-mostrar-login" class="cta-btn btn-nav hidden">🔐 Volver al Login</button>
             </div>
         </div>
@@ -294,7 +288,7 @@
                 registroForm.classList.remove('hidden');
                 btnMostrarRegistro.classList.add('hidden');
                 btnMostrarLogin.classList.remove('hidden');
-                mainTitle.textContent = '📝 Registro de Administrador';
+                mainTitle.textContent = '📝 Solicitud de Acceso Admin';
             });
 
             btnMostrarLogin.addEventListener('click', function() {
@@ -362,7 +356,7 @@
                 }
             });
 
-            // Función de registro mejorada
+            // Función de solicitud de acceso (nuevo flujo)
             registroForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
@@ -371,12 +365,10 @@
                     correo: document.getElementById('reg-correo').value.trim(),
                     password: document.getElementById('reg-password').value,
                     passwordConfirm: document.getElementById('reg-password-confirm').value,
-                    rol: document.getElementById('reg-rol').value,
-                    superCorreo: document.getElementById('super-correo').value.trim(),
-                    superPassword: document.getElementById('super-password').value
+                    justificacion: document.getElementById('reg-justificacion').value.trim()
                 };
 
-                // Validaciones
+                // Validaciones básicas
                 if (formData.password !== formData.passwordConfirm) {
                     mostrarMensaje('Las contraseñas no coinciden.', 'error');
                     return;
@@ -387,28 +379,20 @@
                     return;
                 }
 
-                mostrarMensaje('Validando credenciales del Super Usuario...', 'info');
+                if (!formData.correo.includes('@senati.pe')) {
+                    mostrarMensaje('Debe usar un correo institucional (@senati.pe)', 'error');
+                    return;
+                }
+
+                if (formData.justificacion.length < 20) {
+                    mostrarMensaje('La justificación debe tener al menos 20 caracteres.', 'error');
+                    return;
+                }
+
+                mostrarMensaje('Verificando datos y enviando solicitud...', 'info');
 
                 try {
-                    // Validar Super Usuario
-                    const { data: superUser, error: superError } = await supabase
-                        .from('super_su')
-                        .select('*')
-                        .eq('correo', formData.superCorreo)
-                        .single();
-
-                    if (superError || !superUser) {
-                        mostrarMensaje('Credenciales de Super Usuario incorrectas.', 'error');
-                        console.error('❌ Error Super Usuario:', superError);
-                        return;
-                    }
-
-                    if (superUser.contraseña !== formData.superPassword) {
-                        mostrarMensaje('Contraseña de Super Usuario incorrecta.', 'error');
-                        return;
-                    }
-
-                    // Verificar que el correo del admin no exista
+                    // Verificar que no exista ya un admin con ese correo
                     const { data: adminExistente } = await supabase
                         .from('admin')
                         .select('correo')
@@ -420,39 +404,58 @@
                         return;
                     }
 
-                    mostrarMensaje('Creando nuevo administrador...', 'info');
+                    // Verificar que no haya una solicitud pendiente
+                    const { data: solicitudExistente } = await supabase
+                        .from('solicitudes_admin')
+                        .select('correo')
+                        .eq('correo', formData.correo)
+                        .eq('estado', 'pendiente')
+                        .single();
 
-                    // Crear nuevo administrador
-                    const nuevoAdmin = {
+                    if (solicitudExistente) {
+                        mostrarMensaje('Ya tienes una solicitud pendiente de aprobación.', 'error');
+                        return;
+                    }
+
+                    // Crear nueva solicitud
+                    const nuevaSolicitud = {
+                        id_solicitud: Date.now(), // ID temporal para mock
                         nombre: formData.nombre,
                         correo: formData.correo,
                         contraseña: formData.password,
-                        rol: formData.rol,
-                        id_super_admin: superUser.id_super
+                        justificacion: formData.justificacion,
+                        estado: 'pendiente',
+                        fecha_solicitud: new Date().toISOString(),
+                        fecha_respuesta: null,
+                        rol_asignado: null,
+                        id_super_admin: null
                     };
 
-                    const { data: adminCreado, error: createError } = await supabase
-                        .from('admin')
-                        .insert([nuevoAdmin])
+                    const { data: solicitudCreada, error: createError } = await supabase
+                        .from('solicitudes_admin')
+                        .insert([nuevaSolicitud])
                         .select()
                         .single();
 
                     if (createError) {
-                        console.error('❌ Error creando admin:', createError);
-                        mostrarMensaje('Error al crear el administrador: ' + createError.message, 'error');
+                        console.error('❌ Error creando solicitud:', createError);
+                        mostrarMensaje('Error al enviar la solicitud: ' + createError.message, 'error');
                         return;
                     }
 
-                    mostrarMensaje('¡Administrador registrado exitosamente! Ya puede iniciar sesión.', 'success');
+                    // Éxito
+                    mostrarMensaje('¡Solicitud enviada exitosamente! El Super Usuario la revisará pronto.', 'success');
+                    console.log('✅ Solicitud creada:', solicitudCreada);
                     
+                    // Limpiar formulario y volver al login
                     setTimeout(() => {
                         limpiarFormularioRegistro();
                         btnMostrarLogin.click();
-                        document.getElementById('correo').value = formData.correo;
-                    }, 2000);
+                        mostrarMensaje('Tu solicitud está en revisión. Te notificaremos cuando sea aprobada.', 'info');
+                    }, 2500);
 
                 } catch (error) {
-                    console.error('❌ Error en registro:', error);
+                    console.error('❌ Error en solicitud:', error);
                     mostrarMensaje('Error en el sistema. Intente nuevamente.', 'error');
                 }
             });
@@ -462,9 +465,7 @@
                 document.getElementById('reg-correo').value = '';
                 document.getElementById('reg-password').value = '';
                 document.getElementById('reg-password-confirm').value = '';
-                document.getElementById('reg-rol').value = '';
-                document.getElementById('super-correo').value = '';
-                document.getElementById('super-password').value = '';
+                document.getElementById('reg-justificacion').value = '';
             }
 
             function mostrarMensaje(msg, tipo) {

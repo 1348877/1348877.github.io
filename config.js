@@ -266,6 +266,10 @@ function initializeSupabase() {
                             carrera: 'Computación e Informática',
                             created_at: new Date().toISOString()
                         }
+                    ],
+                    solicitudes_admin: [
+                        // Tabla para almacenar solicitudes de registro pendientes
+                        // Campos: id_solicitud, nombre, correo, contraseña, estado, fecha_solicitud, fecha_respuesta, id_super_admin
                     ]
                 });
                 
