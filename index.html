@@ -319,8 +319,19 @@
                     if (!superError && superUser && superUser.contraseña === password) {
                         mostrarMensaje('¡Bienvenido Super Usuario!', 'success');
                         console.log('✅ Login Super Usuario exitoso:', superUser);
+                        
+                        // Establecer sesión del Super Usuario
+                        const superAdminData = {
+                            id: superUser.id_super_su,
+                            nombre: superUser.nombre,
+                            correo: superUser.correo,
+                            rol: 'super_admin',
+                            permisos: ['encuestas', 'reportes', 'usuarios', 'permisos', 'config']
+                        };
+                        sessionStorage.setItem('adminSession', JSON.stringify(superAdminData));
+                        
                         setTimeout(() => {
-                            window.location.href = 'admin/?super=true';
+                            window.location.href = 'admin/';
                         }, 1200);
                         return;
                     }
@@ -346,6 +357,17 @@
                     // Login exitoso para admin
                     mostrarMensaje('¡Bienvenido, ' + admin.nombre + '!', 'success');
                     console.log('✅ Login admin exitoso:', admin);
+                    
+                    // Establecer sesión del Admin
+                    const adminData = {
+                        id: admin.id_admin,
+                        nombre: admin.nombre,
+                        correo: admin.correo,
+                        rol: admin.rol || 'admin',
+                        permisos: ['encuestas', 'reportes', 'usuarios']
+                    };
+                    sessionStorage.setItem('adminSession', JSON.stringify(adminData));
+                    
                     setTimeout(() => {
                         window.location.href = 'admin/';
                     }, 1200);
