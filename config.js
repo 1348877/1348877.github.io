@@ -238,10 +238,34 @@ function initializeSupabase() {
                     alternativas: [],
                     respuestas: [],
                     admin: [
-                        { id: 1, nombre: 'Admin SENATI', correo: 'admin@senati.pe', rol: 'admin' }
+                        { 
+                            id_admin: 1, 
+                            nombre: 'Admin SENATI', 
+                            correo: 'admin@senati.pe', 
+                            contraseña: 'admin123',
+                            rol: 'admin_general',
+                            id_super_admin: 1,
+                            created_at: new Date().toISOString()
+                        }
+                    ],
+                    super_su: [
+                        {
+                            id_super: 1,
+                            nombre: 'Super Administrador',
+                            correo: 'superadmin@senati.pe',
+                            contraseña: 'superadmin123',
+                            created_at: new Date().toISOString()
+                        }
                     ],
                     alumnos: [
-                        { id: 1, nombre: 'Estudiante Demo', correo: 'estudiante@senati.pe' }
+                        { 
+                            id_alumno: 1, 
+                            nombre: 'Estudiante Demo', 
+                            correo: 'estudiante@senati.pe',
+                            genero: 'Masculino',
+                            carrera: 'Computación e Informática',
+                            created_at: new Date().toISOString()
+                        }
                     ]
                 });
                 
@@ -395,12 +419,48 @@ function initializeSupabase() {
                             };
                         } else {
                             // Insertar un solo elemento
-                            const id = currentData.length > 0 ? Math.max(...currentData.map(d => d[`id_${table.slice(0, -1)}`] || d.id || 0)) + 1 : 1;
+                            let id;
+                            
+                            // Manejar IDs específicos para cada tabla
+                            if (table === 'admin') {
+                                id = currentData.length > 0 ? Math.max(...currentData.map(d => d.id_admin || 0)) + 1 : 1;
+                            } else if (table === 'super_su') {
+                                id = currentData.length > 0 ? Math.max(...currentData.map(d => d.id_super || 0)) + 1 : 1;
+                            } else if (table === 'encuestas') {
+                                id = currentData.length > 0 ? Math.max(...currentData.map(d => d.id_encuesta || 0)) + 1 : 1;
+                            } else if (table === 'preguntas') {
+                                id = currentData.length > 0 ? Math.max(...currentData.map(d => d.id_pregunta || 0)) + 1 : 1;
+                            } else if (table === 'alternativas') {
+                                id = currentData.length > 0 ? Math.max(...currentData.map(d => d.id_alternativa || 0)) + 1 : 1;
+                            } else if (table === 'alumnos') {
+                                id = currentData.length > 0 ? Math.max(...currentData.map(d => d.id_alumno || 0)) + 1 : 1;
+                            } else {
+                                id = currentData.length > 0 ? Math.max(...currentData.map(d => d.id || 0)) + 1 : 1;
+                            }
+                            
+                            // Crear el nuevo item con el ID correcto
                             const newItem = {
-                                [`id_${table.slice(0, -1)}`]: id,
                                 ...data,
                                 created_at: new Date().toISOString()
                             };
+                            
+                            // Asignar el ID con el nombre correcto
+                            if (table === 'admin') {
+                                newItem.id_admin = id;
+                            } else if (table === 'super_su') {
+                                newItem.id_super = id;
+                            } else if (table === 'encuestas') {
+                                newItem.id_encuesta = id;
+                            } else if (table === 'preguntas') {
+                                newItem.id_pregunta = id;
+                            } else if (table === 'alternativas') {
+                                newItem.id_alternativa = id;
+                            } else if (table === 'alumnos') {
+                                newItem.id_alumno = id;
+                            } else {
+                                newItem.id = id;
+                            }
+                            
                             currentData.push(newItem);
                             setStoredData(table, currentData);
                             
