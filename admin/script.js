@@ -1016,6 +1016,8 @@ async function loadReportes() {
     try {
         await loadEstadisticasGenerales();
         await loadEncuestasParaReporte();
+        await loadFiltrosAvanzados();
+        await initializeCharts();
     } catch (error) {
         console.error('Error loading reportes:', error);
         showMessage('Error al cargar los reportes: ' + error.message, 'error');
@@ -1026,14 +1028,19 @@ async function loadEstadisticasGenerales() {
     try {
         // En modo desarrollo, usar datos mock simplificados
         if (SUPABASE_CONFIG.url === 'https://demo.supabase.co') {
-            // Datos de demostración
-            const totalEncuestas = 1;
-            const encuestasActivas = 1;
-            const totalRespuestas = 2;
+            // Datos de demostración más realistas
+            const encuestasData = JSON.parse(localStorage.getItem('mock_encuestas') || '[]');
+            const respuestasData = JSON.parse(localStorage.getItem('mock_respuestas') || '[]');
+            
+            const totalEncuestas = encuestasData.length;
+            const encuestasActivas = encuestasData.filter(e => e.activa).length;
+            const totalRespuestas = respuestasData.length;
+            const promedioRespuestas = totalEncuestas > 0 ? Math.round(totalRespuestas / totalEncuestas) : 0;
             
             document.getElementById('total-encuestas').textContent = totalEncuestas;
             document.getElementById('encuestas-activas').textContent = encuestasActivas;
             document.getElementById('total-respuestas').textContent = totalRespuestas;
+            document.getElementById('promedio-respuestas').textContent = promedioRespuestas;
             
             console.log('📊 Estadísticas cargadas (modo demo)');
             return;
@@ -1058,9 +1065,12 @@ async function loadEstadisticasGenerales() {
             .from('respuestas')
             .select('id_respuesta');
             
+        const promedioRespuestas = totalEncuestas > 0 ? Math.round((respuestasData?.length || 0) / totalEncuestas) : 0;
+            
         document.getElementById('total-encuestas').textContent = totalEncuestas || 0;
         document.getElementById('encuestas-activas').textContent = encuestasActivas || 0;
         document.getElementById('total-respuestas').textContent = respuestasData?.length || 0;
+        document.getElementById('promedio-respuestas').textContent = promedioRespuestas;
         
     } catch (error) {
         console.error('Error loading estadisticas:', error);
@@ -1068,6 +1078,7 @@ async function loadEstadisticasGenerales() {
         document.getElementById('total-encuestas').textContent = '0';
         document.getElementById('encuestas-activas').textContent = '0';
         document.getElementById('total-respuestas').textContent = '0';
+        document.getElementById('promedio-respuestas').textContent = '0';
     }
 }
 
@@ -1094,6 +1105,20 @@ async function loadEncuestasParaReporte() {
                 });
             }
             
+            // También cargar en el selector de análisis
+            const analisisSelect = document.getElementById('analisis-encuesta');
+            if (analisisSelect) {
+                analisisSelect.innerHTML = '<option value="">Seleccione una encuesta...</option>';
+                if (encuestasData && encuestasData.length > 0) {
+                    encuestasData.forEach(encuesta => {
+                        const option = document.createElement('option');
+                        option.value = encuesta.id_encuesta;
+                        option.textContent = encuesta.titulo;
+                        analisisSelect.appendChild(option);
+                    });
+                }
+            }
+            
             console.log('📊 Encuestas para reporte cargadas (modo demo):', encuestasData.length);
             return;
         }
@@ -1103,34 +1128,659 @@ async function loadEncuestasParaReporte() {
             .from('encuestas')
             .select('id_encuesta, titulo')
             .eq('id_admin', currentAdmin.id)
-            .order('titulo');
-            
-        if (error) throw error;
-        
-        const select = document.getElementById('reporte-encuesta');
-        if (!select) {
-            console.warn('Elemento reporte-encuesta no encontrado');
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error loading encuestas para reporte:', error);
             return;
         }
+
+        const select = document.getElementById('reporte-encuesta');
+        const analisisSelect = document.getElementById('analisis-encuesta');
         
-        select.innerHTML = '<option value="">Seleccione una encuesta...</option>';
-        
-        if (encuestas && encuestas.length > 0) {
-            encuestas.forEach(encuesta => {
-                const option = document.createElement('option');
-                option.value = encuesta.id_encuesta;
-                option.textContent = encuesta.titulo;
-                select.appendChild(option);
-            });
+        if (select) {
+            select.innerHTML = '<option value="">Seleccione una encuesta...</option>';
+            if (encuestas && encuestas.length > 0) {
+                encuestas.forEach(encuesta => {
+                    const option = document.createElement('option');
+                    option.value = encuesta.id_encuesta;
+                    option.textContent = encuesta.titulo;
+                    select.appendChild(option);
+                });
+            }
         }
+        
+        if (analisisSelect) {
+            analisisSelect.innerHTML = '<option value="">Seleccione una encuesta...</option>';
+            if (encuestas && encuestas.length > 0) {
+                encuestas.forEach(encuesta => {
+                    const option = document.createElement('option');
+                    option.value = encuesta.id_encuesta;
+                    option.textContent = encuesta.titulo;
+                    analisisSelect.appendChild(option);
+                });
+            }
+        }
+
+        console.log('📊 Encuestas para reporte cargadas:', encuestas.length);
         
     } catch (error) {
         console.error('Error loading encuestas para reporte:', error);
-        // Mostrar mensaje de error más amigable
-        const select = document.getElementById('reporte-encuesta');
-        if (select) {
-            select.innerHTML = '<option value="">Error al cargar encuestas</option>';
+    }
+}
+
+// Variables globales para las gráficas
+let chartRespuestasEncuesta = null;
+let chartGenero = null;
+let chartCarrera = null;
+let chartTendencia = null;
+
+// Datos filtrados globales
+let datosOriginales = {
+    encuestas: [],
+    respuestas: [],
+    alumnos: [],
+    admins: []
+};
+
+let datosFiltrados = {
+    encuestas: [],
+    respuestas: [],
+    alumnos: []
+};
+
+async function loadFiltrosAvanzados() {
+    try {
+        // Cargar datos para los filtros
+        await cargarDatosOriginales();
+        await poblarFiltros();
+        
+        // Configurar event listeners para filtros
+        setupFiltrosEventListeners();
+        
+        console.log('🔍 Filtros avanzados inicializados');
+    } catch (error) {
+        console.error('Error cargando filtros:', error);
+    }
+}
+
+async function cargarDatosOriginales() {
+    if (SUPABASE_CONFIG.url === 'https://demo.supabase.co') {
+        // Datos mock para desarrollo
+        datosOriginales.encuestas = JSON.parse(localStorage.getItem('mock_encuestas') || '[]');
+        datosOriginales.respuestas = JSON.parse(localStorage.getItem('mock_respuestas') || '[]');
+        datosOriginales.alumnos = JSON.parse(localStorage.getItem('mock_alumnos') || '[]');
+        datosOriginales.admins = JSON.parse(localStorage.getItem('mock_admin') || '[]');
+        
+        // Generar datos de prueba si no existen
+        if (datosOriginales.alumnos.length === 0) {
+            generarDatosPrueba();
         }
+    } else {
+        // Cargar datos reales de Supabase
+        const [encuestas, respuestas, alumnos, admins] = await Promise.all([
+            supabase.from('encuestas').select('*'),
+            supabase.from('respuestas').select('*'),
+            supabase.from('alumnos').select('*'),
+            supabase.from('admin').select('*')
+        ]);
+        
+        datosOriginales.encuestas = encuestas.data || [];
+        datosOriginales.respuestas = respuestas.data || [];
+        datosOriginales.alumnos = alumnos.data || [];
+        datosOriginales.admins = admins.data || [];
+    }
+    
+    // Inicialmente, los datos filtrados son iguales a los originales
+    datosFiltrados = JSON.parse(JSON.stringify(datosOriginales));
+}
+
+function generarDatosPrueba() {
+    // Generar alumnos de prueba
+    const carreras = ['Computación e Informática', 'Electrotecnia Industrial', 'Mecánica Automotriz', 'Administración Industrial', 'Contabilidad'];
+    const generos = ['Masculino', 'Femenino', 'Otro'];
+    
+    const alumnos = [];
+    for (let i = 1; i <= 50; i++) {
+        alumnos.push({
+            id_alumno: i,
+            nombre: `Estudiante ${i}`,
+            genero: generos[Math.floor(Math.random() * generos.length)],
+            carrera: carreras[Math.floor(Math.random() * carreras.length)],
+            correo: `estudiante${i}@senati.pe`,
+            created_at: new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString()
+        });
+    }
+    
+    // Generar respuestas de prueba
+    const respuestas = [];
+    const encuestas = datosOriginales.encuestas;
+    
+    for (let i = 1; i <= 100; i++) {
+        const alumno = alumnos[Math.floor(Math.random() * alumnos.length)];
+        const encuesta = encuestas[Math.floor(Math.random() * encuestas.length)];
+        
+        if (encuesta) {
+            respuestas.push({
+                id_respuesta: i,
+                id_alumno: alumno.id_alumno,
+                id_encuesta: encuesta.id_encuesta,
+                created_at: new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString()
+            });
+        }
+    }
+    
+    datosOriginales.alumnos = alumnos;
+    datosOriginales.respuestas = respuestas;
+    
+    // Guardar en localStorage
+    localStorage.setItem('mock_alumnos', JSON.stringify(alumnos));
+    localStorage.setItem('mock_respuestas', JSON.stringify(respuestas));
+}
+
+async function poblarFiltros() {
+    // Poblar filtro de encuestas
+    const filterEncuesta = document.getElementById('filter-encuesta');
+    const analisisEncuesta = document.getElementById('analisis-encuesta');
+    
+    if (filterEncuesta && analisisEncuesta) {
+        const encuestasOptions = datosOriginales.encuestas.map(e => 
+            `<option value="${e.id_encuesta}">${e.titulo}</option>`
+        ).join('');
+        
+        filterEncuesta.innerHTML = '<option value="">Todas las encuestas</option>' + encuestasOptions;
+        analisisEncuesta.innerHTML = '<option value="">Seleccione una encuesta...</option>' + encuestasOptions;
+    }
+    
+    // Poblar filtro de carreras
+    const filterCarrera = document.getElementById('filter-carrera');
+    if (filterCarrera) {
+        const carreras = [...new Set(datosOriginales.alumnos.map(a => a.carrera))];
+        const carrerasOptions = carreras.map(c => `<option value="${c}">${c}</option>`).join('');
+        filterCarrera.innerHTML = '<option value="">Todas las carreras</option>' + carrerasOptions;
+    }
+    
+    // Poblar filtro de administradores
+    const filterAdmin = document.getElementById('filter-admin');
+    if (filterAdmin) {
+        const adminsOptions = datosOriginales.admins.map(a => 
+            `<option value="${a.id_admin}">${a.nombre}</option>`
+        ).join('');
+        filterAdmin.innerHTML = '<option value="">Todos</option>' + adminsOptions;
+    }
+}
+
+function setupFiltrosEventListeners() {
+    const aplicarBtn = document.getElementById('aplicar-filtros');
+    const limpiarBtn = document.getElementById('limpiar-filtros');
+    const exportarBtn = document.getElementById('exportar-datos');
+    
+    if (aplicarBtn) {
+        aplicarBtn.addEventListener('click', aplicarFiltros);
+    }
+    
+    if (limpiarBtn) {
+        limpiarBtn.addEventListener('click', limpiarFiltros);
+    }
+    
+    if (exportarBtn) {
+        exportarBtn.addEventListener('click', exportarDatos);
+    }
+    
+    // Event listeners para análisis detallado
+    const analisisEncuesta = document.getElementById('analisis-encuesta');
+    if (analisisEncuesta) {
+        analisisEncuesta.addEventListener('change', cargarPreguntasAnalisis);
+    }
+    
+    const analisisPregunta = document.getElementById('analisis-pregunta');
+    if (analisisPregunta) {
+        analisisPregunta.addEventListener('change', analizarPreguntaDetallada);
+    }
+}
+
+async function aplicarFiltros() {
+    try {
+        // Obtener valores de filtros
+        const filtros = {
+            encuesta: document.getElementById('filter-encuesta')?.value || '',
+            fechaInicio: document.getElementById('filter-fecha-inicio')?.value || '',
+            fechaFin: document.getElementById('filter-fecha-fin')?.value || '',
+            genero: document.getElementById('filter-genero')?.value || '',
+            carrera: document.getElementById('filter-carrera')?.value || '',
+            estado: document.getElementById('filter-estado')?.value || '',
+            admin: document.getElementById('filter-admin')?.value || ''
+        };
+        
+        // Aplicar filtros a los datos
+        datosFiltrados = filtrarDatos(datosOriginales, filtros);
+        
+        // Actualizar estadísticas
+        actualizarEstadisticasFiltradas(filtros);
+        
+        // Actualizar gráficas
+        await actualizarGraficas();
+        
+        showMessage('Filtros aplicados correctamente', 'success');
+        
+    } catch (error) {
+        console.error('Error aplicando filtros:', error);
+        showMessage('Error al aplicar filtros: ' + error.message, 'error');
+    }
+}
+
+function filtrarDatos(datos, filtros) {
+    let encuestasFiltradas = [...datos.encuestas];
+    let respuestasFiltradas = [...datos.respuestas];
+    let alumnosFiltrados = [...datos.alumnos];
+    
+    // Filtrar por encuesta
+    if (filtros.encuesta) {
+        encuestasFiltradas = encuestasFiltradas.filter(e => e.id_encuesta == filtros.encuesta);
+        respuestasFiltradas = respuestasFiltradas.filter(r => r.id_encuesta == filtros.encuesta);
+    }
+    
+    // Filtrar por estado de encuesta
+    if (filtros.estado !== '') {
+        const estadoBool = filtros.estado === 'true';
+        encuestasFiltradas = encuestasFiltradas.filter(e => e.activa === estadoBool);
+        const encuestasIds = encuestasFiltradas.map(e => e.id_encuesta);
+        respuestasFiltradas = respuestasFiltradas.filter(r => encuestasIds.includes(r.id_encuesta));
+    }
+    
+    // Filtrar por administrador
+    if (filtros.admin) {
+        encuestasFiltradas = encuestasFiltradas.filter(e => e.id_admin == filtros.admin);
+        const encuestasIds = encuestasFiltradas.map(e => e.id_encuesta);
+        respuestasFiltradas = respuestasFiltradas.filter(r => encuestasIds.includes(r.id_encuesta));
+    }
+    
+    // Filtrar por fecha
+    if (filtros.fechaInicio) {
+        const fechaInicio = new Date(filtros.fechaInicio);
+        respuestasFiltradas = respuestasFiltradas.filter(r => new Date(r.created_at) >= fechaInicio);
+    }
+    
+    if (filtros.fechaFin) {
+        const fechaFin = new Date(filtros.fechaFin);
+        fechaFin.setHours(23, 59, 59, 999);
+        respuestasFiltradas = respuestasFiltradas.filter(r => new Date(r.created_at) <= fechaFin);
+    }
+    
+    // Filtrar alumnos por género y carrera
+    if (filtros.genero) {
+        alumnosFiltrados = alumnosFiltrados.filter(a => a.genero === filtros.genero);
+    }
+    
+    if (filtros.carrera) {
+        alumnosFiltrados = alumnosFiltrados.filter(a => a.carrera === filtros.carrera);
+    }
+    
+    // Filtrar respuestas por alumnos filtrados
+    if (filtros.genero || filtros.carrera) {
+        const alumnosIds = alumnosFiltrados.map(a => a.id_alumno);
+        respuestasFiltradas = respuestasFiltradas.filter(r => alumnosIds.includes(r.id_alumno));
+    }
+    
+    return {
+        encuestas: encuestasFiltradas,
+        respuestas: respuestasFiltradas,
+        alumnos: alumnosFiltrados
+    };
+}
+
+function actualizarEstadisticasFiltradas(filtros) {
+    const totalEncuestas = datosFiltrados.encuestas.length;
+    const encuestasActivas = datosFiltrados.encuestas.filter(e => e.activa).length;
+    const totalRespuestas = datosFiltrados.respuestas.length;
+    const promedioRespuestas = totalEncuestas > 0 ? Math.round(totalRespuestas / totalEncuestas) : 0;
+    
+    // Actualizar números principales
+    document.getElementById('total-encuestas').textContent = totalEncuestas;
+    document.getElementById('encuestas-activas').textContent = encuestasActivas;
+    document.getElementById('total-respuestas').textContent = totalRespuestas;
+    document.getElementById('promedio-respuestas').textContent = promedioRespuestas;
+    
+    // Actualizar textos descriptivos
+    const descripcionFiltro = generarDescripcionFiltro(filtros);
+    document.getElementById('encuestas-filtradas').textContent = descripcionFiltro;
+    document.getElementById('respuestas-filtradas').textContent = descripcionFiltro;
+    document.getElementById('activas-filtradas').textContent = descripcionFiltro;
+    document.getElementById('promedio-filtrado').textContent = descripcionFiltro;
+}
+
+function generarDescripcionFiltro(filtros) {
+    const filtrosActivos = [];
+    
+    if (filtros.encuesta) filtrosActivos.push('encuesta específica');
+    if (filtros.fechaInicio || filtros.fechaFin) filtrosActivos.push('rango de fechas');
+    if (filtros.genero) filtrosActivos.push(`género: ${filtros.genero}`);
+    if (filtros.carrera) filtrosActivos.push('carrera específica');
+    if (filtros.estado !== '') filtrosActivos.push(filtros.estado === 'true' ? 'solo activas' : 'solo inactivas');
+    if (filtros.admin) filtrosActivos.push('admin específico');
+    
+    if (filtrosActivos.length === 0) {
+        return 'Sin filtros aplicados';
+    }
+    
+    return `Filtrado por: ${filtrosActivos.join(', ')}`;
+}
+
+function limpiarFiltros() {
+    // Limpiar todos los campos de filtro
+    document.getElementById('filter-encuesta').value = '';
+    document.getElementById('filter-fecha-inicio').value = '';
+    document.getElementById('filter-fecha-fin').value = '';
+    document.getElementById('filter-genero').value = '';
+    document.getElementById('filter-carrera').value = '';
+    document.getElementById('filter-estado').value = '';
+    document.getElementById('filter-admin').value = '';
+    
+    // Restaurar datos originales
+    datosFiltrados = JSON.parse(JSON.stringify(datosOriginales));
+    
+    // Actualizar estadísticas y gráficas
+    actualizarEstadisticasFiltradas({});
+    actualizarGraficas();
+    
+    showMessage('Filtros limpiados', 'info');
+}
+
+async function initializeCharts() {
+    try {
+        await crearGraficaRespuestasEncuesta();
+        await crearGraficaGenero();
+        await crearGraficaCarrera();
+        await crearGraficaTendencia();
+        
+        console.log('📊 Gráficas inicializadas');
+    } catch (error) {
+        console.error('Error inicializando gráficas:', error);
+    }
+}
+
+async function crearGraficaRespuestasEncuesta() {
+    const ctx = document.getElementById('chart-respuestas-encuesta');
+    if (!ctx) return;
+    
+    // Destruir gráfica anterior si existe
+    if (chartRespuestasEncuesta) {
+        chartRespuestasEncuesta.destroy();
+    }
+    
+    // Datos para la gráfica
+    const encuestasConRespuestas = datosFiltrados.encuestas.map(encuesta => {
+        const respuestas = datosFiltrados.respuestas.filter(r => r.id_encuesta === encuesta.id_encuesta);
+        return {
+            titulo: encuesta.titulo,
+            respuestas: respuestas.length
+        };
+    });
+    
+    chartRespuestasEncuesta = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: encuestasConRespuestas.map(e => e.titulo.length > 20 ? e.titulo.substring(0, 20) + '...' : e.titulo),
+            datasets: [{
+                label: 'Número de Respuestas',
+                data: encuestasConRespuestas.map(e => e.respuestas),
+                backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+async function crearGraficaGenero() {
+    const ctx = document.getElementById('chart-genero');
+    if (!ctx) return;
+    
+    if (chartGenero) {
+        chartGenero.destroy();
+    }
+    
+    // Contar respuestas por género
+    const generos = {};
+    datosFiltrados.respuestas.forEach(respuesta => {
+        const alumno = datosFiltrados.alumnos.find(a => a.id_alumno === respuesta.id_alumno);
+        if (alumno) {
+            generos[alumno.genero] = (generos[alumno.genero] || 0) + 1;
+        }
+    });
+    
+    const colores = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'];
+    
+    chartGenero = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(generos),
+            datasets: [{
+                data: Object.values(generos),
+                backgroundColor: colores.slice(0, Object.keys(generos).length),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+async function crearGraficaCarrera() {
+    const ctx = document.getElementById('chart-carrera');
+    if (!ctx) return;
+    
+    if (chartCarrera) {
+        chartCarrera.destroy();
+    }
+    
+    // Contar respuestas por carrera
+    const carreras = {};
+    datosFiltrados.respuestas.forEach(respuesta => {
+        const alumno = datosFiltrados.alumnos.find(a => a.id_alumno === respuesta.id_alumno);
+        if (alumno) {
+            carreras[alumno.carrera] = (carreras[alumno.carrera] || 0) + 1;
+        }
+    });
+    
+    chartCarrera = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(carreras).map(c => c.length > 15 ? c.substring(0, 15) + '...' : c),
+            datasets: [{
+                label: 'Respuestas por Carrera',
+                data: Object.values(carreras),
+                backgroundColor: 'rgba(76, 192, 192, 0.6)',
+                borderColor: 'rgba(76, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+async function crearGraficaTendencia() {
+    const ctx = document.getElementById('chart-tendencia');
+    if (!ctx) return;
+    
+    if (chartTendencia) {
+        chartTendencia.destroy();
+    }
+    
+    // Agrupar respuestas por fecha
+    const respuestasPorFecha = {};
+    datosFiltrados.respuestas.forEach(respuesta => {
+        const fecha = new Date(respuesta.created_at).toLocaleDateString();
+        respuestasPorFecha[fecha] = (respuestasPorFecha[fecha] || 0) + 1;
+    });
+    
+    // Ordenar fechas
+    const fechasOrdenadas = Object.keys(respuestasPorFecha).sort((a, b) => new Date(a) - new Date(b));
+    
+    chartTendencia = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: fechasOrdenadas,
+            datasets: [{
+                label: 'Respuestas por Día',
+                data: fechasOrdenadas.map(fecha => respuestasPorFecha[fecha]),
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+async function actualizarGraficas() {
+    await crearGraficaRespuestasEncuesta();
+    await crearGraficaGenero();
+    await crearGraficaCarrera();
+    await crearGraficaTendencia();
+}
+
+function exportarDatos() {
+    try {
+        // Crear datos CSV
+        let csvContent = "data:text/csv;charset=utf-8,";
+        
+        // Headers
+        csvContent += "Encuesta,Fecha Respuesta,Alumno,Género,Carrera\n";
+        
+        // Datos
+        datosFiltrados.respuestas.forEach(respuesta => {
+            const encuesta = datosFiltrados.encuestas.find(e => e.id_encuesta === respuesta.id_encuesta);
+            const alumno = datosFiltrados.alumnos.find(a => a.id_alumno === respuesta.id_alumno);
+            
+            if (encuesta && alumno) {
+                const fecha = new Date(respuesta.created_at).toLocaleDateString();
+                csvContent += `"${encuesta.titulo}","${fecha}","${alumno.nombre}","${alumno.genero}","${alumno.carrera}"\n`;
+            }
+        });
+        
+        // Descargar archivo
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `datos_encuestas_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showMessage('Datos exportados correctamente', 'success');
+        
+    } catch (error) {
+        console.error('Error exportando datos:', error);
+        showMessage('Error al exportar datos: ' + error.message, 'error');
+    }
+}
+
+async function cargarPreguntasAnalisis() {
+    const encuestaId = document.getElementById('analisis-encuesta').value;
+    const preguntaSelect = document.getElementById('analisis-pregunta');
+    
+    if (!encuestaId) {
+        preguntaSelect.innerHTML = '<option value="">Primero seleccione una encuesta</option>';
+        document.getElementById('analisis-pregunta-detalle').innerHTML = '';
+        return;
+    }
+    
+    try {
+        // Cargar preguntas de la encuesta seleccionada
+        let preguntas = [];
+        
+        if (SUPABASE_CONFIG.url === 'https://demo.supabase.co') {
+            preguntas = JSON.parse(localStorage.getItem('mock_preguntas') || '[]')
+                .filter(p => p.id_encuesta == encuestaId);
+        } else {
+            const { data } = await supabase
+                .from('preguntas')
+                .select('*')
+                .eq('id_encuesta', encuestaId)
+                .order('orden_pregunta');
+            preguntas = data || [];
+        }
+        
+        preguntaSelect.innerHTML = '<option value="">Seleccione una pregunta...</option>';
+        preguntas.forEach(pregunta => {
+            const option = document.createElement('option');
+            option.value = pregunta.id_pregunta;
+            option.textContent = pregunta.texto.length > 50 ? pregunta.texto.substring(0, 50) + '...' : pregunta.texto;
+            preguntaSelect.appendChild(option);
+        });
+        
+    } catch (error) {
+        console.error('Error cargando preguntas:', error);
+        showMessage('Error al cargar preguntas: ' + error.message, 'error');
+    }
+}
+
+async function analizarPreguntaDetallada() {
+    const preguntaId = document.getElementById('analisis-pregunta').value;
+    const contenedor = document.getElementById('analisis-pregunta-detalle');
+    
+    if (!preguntaId) {
+        contenedor.innerHTML = '';
+        return;
+    }
+    
+    try {
+        // Implementar análisis detallado de pregunta específica
+        contenedor.innerHTML = '<div class="loading">Cargando análisis detallado...</div>';
+        
+        // Esta función se puede expandir para mostrar análisis específico por pregunta
+        setTimeout(() => {
+            contenedor.innerHTML = `
+                <div class="pregunta-analysis">
+                    <h4>📊 Análisis de Pregunta Específica</h4>
+                    <p>Funcionalidad en desarrollo. Aquí se mostrará el análisis detallado de la pregunta seleccionada con estadísticas específicas, distribución de respuestas y insights.</p>
+                </div>
+            `;
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Error analizando pregunta:', error);
+        contenedor.innerHTML = '<p class="error">Error al cargar el análisis de la pregunta.</p>';
     }
 }
 

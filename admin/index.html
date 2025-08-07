@@ -8,6 +8,9 @@
     <!-- Sentry SDK -->
     <script src="https://js.sentry-cdn.com/db9dacf914f7fae45d7ba634f3ff0d70.min.js" crossorigin="anonymous"></script>
     
+    <!-- Chart.js para gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <link rel="stylesheet" href="../assets/common.css">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -123,30 +126,157 @@
             <!-- Sección: Reportes -->
             <div id="section-reportes" class="admin-section hidden">
                 <div class="card">
-                    <h2>📈 Reportes y Estadísticas</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <h3 id="total-encuestas">0</h3>
-                            <p>Total Encuestas</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3 id="total-respuestas">0</h3>
-                            <p>Total Respuestas</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3 id="encuestas-activas">0</h3>
-                            <p>Encuestas Activas</p>
+                    <h2>📈 Análisis y Visualización de Datos</h2>
+                    
+                    <!-- Panel de Filtros Avanzados -->
+                    <div class="filters-panel">
+                        <h3>🔍 Filtros de Análisis</h3>
+                        <div class="filters-grid">
+                            <div class="filter-group">
+                                <label for="filter-encuesta">Encuesta:</label>
+                                <select id="filter-encuesta" class="form-control">
+                                    <option value="">Todas las encuestas</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="filter-fecha-inicio">Fecha inicio:</label>
+                                <input type="date" id="filter-fecha-inicio" class="form-control">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="filter-fecha-fin">Fecha fin:</label>
+                                <input type="date" id="filter-fecha-fin" class="form-control">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="filter-genero">Género:</label>
+                                <select id="filter-genero" class="form-control">
+                                    <option value="">Todos</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Femenino">Femenino</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="filter-carrera">Carrera:</label>
+                                <select id="filter-carrera" class="form-control">
+                                    <option value="">Todas las carreras</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="filter-estado">Estado encuesta:</label>
+                                <select id="filter-estado" class="form-control">
+                                    <option value="">Todas</option>
+                                    <option value="true">Activas</option>
+                                    <option value="false">Inactivas</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="filter-admin">Administrador:</label>
+                                <select id="filter-admin" class="form-control">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-actions">
+                                <button id="aplicar-filtros" class="btn btn-primary">🔍 Aplicar Filtros</button>
+                                <button id="limpiar-filtros" class="btn btn-secondary">🗑️ Limpiar</button>
+                                <button id="exportar-datos" class="btn btn-success">📊 Exportar CSV</button>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="form-group mt-20">
-                        <label for="reporte-encuesta">Seleccionar encuesta para reporte detallado:</label>
-                        <select id="reporte-encuesta" class="form-control">
-                            <option value="">Seleccione una encuesta...</option>
-                        </select>
+                    <!-- Dashboard de Estadísticas -->
+                    <div class="stats-dashboard">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <h3 id="total-encuestas">0</h3>
+                                <p>Total Encuestas</p>
+                                <small id="encuestas-filtradas">Sin filtros aplicados</small>
+                            </div>
+                            <div class="stat-card">
+                                <h3 id="total-respuestas">0</h3>
+                                <p>Total Respuestas</p>
+                                <small id="respuestas-filtradas">Sin filtros aplicados</small>
+                            </div>
+                            <div class="stat-card">
+                                <h3 id="encuestas-activas">0</h3>
+                                <p>Encuestas Activas</p>
+                                <small id="activas-filtradas">Sin filtros aplicados</small>
+                            </div>
+                            <div class="stat-card">
+                                <h3 id="promedio-respuestas">0</h3>
+                                <p>Promedio Respuestas/Encuesta</p>
+                                <small id="promedio-filtrado">Sin filtros aplicados</small>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div id="reporte-detallado" class="mt-20"></div>
+                    <!-- Visualizaciones de Datos -->
+                    <div class="charts-section">
+                        <div class="charts-grid">
+                            <!-- Gráfica de barras: Respuestas por encuesta -->
+                            <div class="chart-container">
+                                <h4>📊 Respuestas por Encuesta</h4>
+                                <canvas id="chart-respuestas-encuesta"></canvas>
+                            </div>
+                            
+                            <!-- Gráfica de pastel: Distribución por género -->
+                            <div class="chart-container">
+                                <h4>👥 Distribución por Género</h4>
+                                <canvas id="chart-genero"></canvas>
+                            </div>
+                            
+                            <!-- Gráfica de barras: Respuestas por carrera -->
+                            <div class="chart-container">
+                                <h4>🎓 Respuestas por Carrera</h4>
+                                <canvas id="chart-carrera"></canvas>
+                            </div>
+                            
+                            <!-- Gráfica de líneas: Respuestas por fecha -->
+                            <div class="chart-container">
+                                <h4>📅 Tendencia de Respuestas</h4>
+                                <canvas id="chart-tendencia"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Análisis Detallado por Pregunta -->
+                    <div class="detailed-analysis">
+                        <h3>🔍 Análisis Detallado por Pregunta</h3>
+                        <div class="form-group">
+                            <label for="analisis-encuesta">Seleccionar encuesta para análisis:</label>
+                            <select id="analisis-encuesta" class="form-control">
+                                <option value="">Seleccione una encuesta...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="analisis-pregunta">Seleccionar pregunta:</label>
+                            <select id="analisis-pregunta" class="form-control">
+                                <option value="">Primero seleccione una encuesta</option>
+                            </select>
+                        </div>
+                        
+                        <div id="analisis-pregunta-detalle" class="mt-20"></div>
+                    </div>
+                    
+                    <!-- Reportes Tradicionales -->
+                    <div class="traditional-reports">
+                        <h3>📋 Reportes Tradicionales</h3>
+                        <div class="form-group">
+                            <label for="reporte-encuesta">Seleccionar encuesta para reporte completo:</label>
+                            <select id="reporte-encuesta" class="form-control">
+                                <option value="">Seleccione una encuesta...</option>
+                            </select>
+                        </div>
+                        
+                        <div id="reporte-detallado" class="mt-20"></div>
+                    </div>
                 </div>
             </div>
 

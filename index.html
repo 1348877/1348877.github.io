@@ -113,167 +113,27 @@
     </style>
 </head>
 <body>
-    <!-- Hero Section -->
+
+    <!-- Login Section -->
     <section class="hero">
         <div class="container">
-            <h1>📋 Sistema de Encuestas</h1>
-            <p>Crea, gestiona y analiza encuestas de forma sencilla y profesional</p>
-            
-            <div class="cta-buttons">
-                <a href="admin/" class="cta-btn">
-                    🔧 Panel Administrativo
-                </a>
-                <a href="usuario/?id=demo" class="cta-btn">
-                    📝 Ver Encuesta Demo
-                </a>
-            </div>
+            <h1>� Iniciar Sesión Administrador</h1>
+            <form id="login-form" style="max-width: 400px; margin: 40px auto 0 auto; text-align: left; background: rgba(255,255,255,0.1); padding: 30px; border-radius: 10px;">
+                <label for="correo">Correo electrónico</label>
+                <input type="email" id="correo" name="correo" required style="width:100%;padding:10px;margin-bottom:15px;border-radius:5px;border:1px solid #ccc;">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="password" required style="width:100%;padding:10px;margin-bottom:20px;border-radius:5px;border:1px solid #ccc;">
+                <button type="submit" class="cta-btn" style="width:100%;">Iniciar Sesión</button>
+            </form>
         </div>
     </section>
-
-    <!-- Features Section -->
-    <section class="container">
-        <div class="card text-center">
-            <h2>✨ Características Principales</h2>
-            <p>Un sistema completo y gratuito para gestionar encuestas en línea</p>
-        </div>
-
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🔧</div>
-                <h3>Panel Administrativo</h3>
-                <p>Crea y gestiona encuestas con un editor intuitivo. Soporte para preguntas de opción múltiple, única y texto abierto.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3>Reportes en Tiempo Real</h3>
-                <p>Visualiza estadísticas y análisis detallados de las respuestas conforme van llegando.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">📱</div>
-                <h3>Diseño Responsive</h3>
-                <p>Funciona perfectamente en computadoras, tablets y smartphones. Experiencia optimizada para todos los dispositivos.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🔒</div>
-                <h3>Seguro y Confiable</h3>
-                <p>Base de datos segura con PostgreSQL, Row Level Security y hosting gratuito en GitHub Pages.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🚀</div>
-                <h3>Fácil de Usar</h3>
-                <p>Interfaz intuitiva tanto para administradores como para usuarios. No requiere conocimientos técnicos.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">💰</div>
-                <h3>100% Gratuito</h3>
-                <p>Hosting gratuito con GitHub Pages y base de datos gratuita con Supabase. Sin costos ocultos.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Demo Section -->
-    <section class="demo-section">
-        <div class="container">
-            <h2>🎯 Prueba el Sistema</h2>
-            <p>Explora todas las funcionalidades con nuestro demo interactivo</p>
-            
-            <div class="demo-credentials">
-                <h3>🔐 Credenciales de Demo</h3>
-                <p><strong>Email:</strong> admin@sistema.com</p>
-                <p><strong>Contraseña:</strong> admin123</p>
-                <p><small>Úsalas para acceder al panel administrativo</small></p>
-            </div>
-            
-            <div class="cta-buttons">
-                <a href="admin/" class="btn btn-primary btn-large">
-                    🔧 Probar Panel Admin
-                </a>
-                <a href="usuario/?id=1" class="btn btn-secondary btn-large">
-                    📝 Responder Encuesta
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Technology Section -->
-    <section class="container">
-        <div class="card">
-            <h2>🛠️ Tecnologías Utilizadas</h2>
-            <div class="features-grid">
-                <div class="text-center">
-                    <h4>Frontend</h4>
-                    <p>HTML5, CSS3, JavaScript Vanilla</p>
-                </div>
-                <div class="text-center">
-                    <h4>Base de Datos</h4>
-                    <p>PostgreSQL con Supabase</p>
-                </div>
-                <div class="text-center">
-                    <h4>Hosting</h4>
-                    <p>GitHub Pages</p>
-                </div>
-                <div class="text-center">
-                    <h4>Seguridad</h4>
-                    <p>Row Level Security (RLS)</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Getting Started Section -->
-    <section class="container">
-        <div class="card">
-            <h2>🚀 Comenzar Ahora</h2>
-            <p>Sigue estos pasos para implementar tu propio sistema de encuestas:</p>
-            
-            <div class="features-grid">
-                <div>
-                    <h4>1️⃣ Configurar Base de Datos</h4>
-                    <p>Crea una cuenta en Supabase y ejecuta el script SQL incluido</p>
-                </div>
-                <div>
-                    <h4>2️⃣ Configurar Proyecto</h4>
-                    <p>Edita el archivo config.js con tus credenciales de Supabase</p>
-                </div>
-                <div>
-                    <h4>3️⃣ Subir a GitHub</h4>
-                    <p>Sube el proyecto a GitHub y activa GitHub Pages</p>
-                </div>
-                <div>
-                    <h4>4️⃣ ¡Listo!</h4>
-                    <p>Tu sistema de encuestas estará disponible en línea</p>
-                </div>
-            </div>
-            
-            <div class="text-center mt-20">
-                <a href="SETUP.md" class="btn btn-success btn-large">
-                    📖 Ver Guía Completa
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="header">
-        <div class="container text-center">
-            <p>Sistema de Encuestas - Desarrollado con ❤️ por Alexander</p>
-            <p>Código abierto disponible en GitHub</p>
-        </div>
-    </footer>
 
     <!-- Scripts -->
     <script src="config.js"></script>
     <script>
-        // Inicializar Sentry al cargar la página
+        // Inicializar Sentry y Supabase al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Inicializando sistema principal...');
-            
-            // Inicializar Sentry
             const sentryActive = initializeSentry();
             if (sentryActive) {
                 console.log('✅ Sentry activo');
@@ -282,8 +142,6 @@
                     timestamp: new Date().toISOString()
                 });
             }
-            
-            // Manejo global de errores
             window.addEventListener('error', (event) => {
                 captureSentryError(event.error, {
                     page: 'index',
@@ -291,6 +149,67 @@
                     lineno: event.lineno
                 });
             });
+
+            // Inicializar Supabase
+            const supabase = initializeSupabase();
+
+            // Login funcional
+            const loginForm = document.getElementById('login-form');
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const correo = document.getElementById('correo').value.trim();
+                const password = document.getElementById('password').value;
+                mostrarMensaje('Verificando credenciales...', 'info');
+
+                // Buscar admin por correo
+                const { data: admin, error } = await supabase
+                    .from('admin')
+                    .select('*')
+                    .eq('correo', correo)
+                    .single();
+
+                if (error || !admin) {
+                    mostrarMensaje('Correo o contraseña incorrectos.', 'error');
+                    return;
+                }
+                // Validar contraseña (en texto plano, para demo)
+                if (admin.contraseña !== password) {
+                    mostrarMensaje('Correo o contraseña incorrectos.', 'error');
+                    return;
+                }
+                // Login exitoso
+                mostrarMensaje('¡Bienvenido, ' + admin.nombre + '!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'admin/';
+                }, 1200);
+            });
+
+            // Mensaje visual
+            function mostrarMensaje(msg, tipo) {
+                let el = document.getElementById('msg-login');
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = 'msg-login';
+                    el.style.margin = '20px auto 0 auto';
+                    el.style.maxWidth = '400px';
+                    el.style.textAlign = 'center';
+                    loginForm.parentNode.insertBefore(el, loginForm.nextSibling);
+                }
+                el.textContent = msg;
+                el.style.padding = '10px';
+                el.style.borderRadius = '6px';
+                el.style.fontWeight = 'bold';
+                if (tipo === 'error') {
+                    el.style.background = '#ffe5e5';
+                    el.style.color = '#c00';
+                } else if (tipo === 'success') {
+                    el.style.background = '#e5ffe5';
+                    el.style.color = '#080';
+                } else {
+                    el.style.background = '#eef';
+                    el.style.color = '#333';
+                }
+            }
         });
     </script>
 </body>
